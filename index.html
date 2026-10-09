@@ -5,43 +5,525 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>KK5 Admin Dashboard</title>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
   <style>
+    :root {
+      --black: #171717;
+      --bg: #f5f5f5;
+      --white: #fff;
+      --muted: #737373;
+      --border: #e5e5e5;
+      --yellow: #facc15;
+      --green: #15803d;
+      --red: #b91c1c;
+      --blue: #1d4ed8;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      color: #171717;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--black);
     }
+
     header {
-      background: #111;
+      background: var(--black);
       color: white;
-      padding: 24px;
+      padding: 22px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
     }
+
+    header h1 {
+      margin: 0;
+      font-size: 23px;
+    }
+
+    header p {
+      margin: 6px 0 0;
+      color: #c4c4c4;
+      font-size: 13px;
+    }
+
     main {
-      max-width: 900px;
-      margin: 40px auto;
-      padding: 24px;
+      max-width: 1250px;
+      margin: 30px auto;
+      padding: 0 20px 40px;
     }
-    .card {
-      background: white;
-      padding: 24px;
+
+    .panel {
+      background: var(--white);
+      border: 1px solid var(--border);
       border-radius: 12px;
-      box-shadow: 0 2px 8px #00000012;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .login-panel {
+      max-width: 480px;
+      margin: 65px auto;
+      text-align: center;
+    }
+
+    .login-panel h2 { margin-top: 0; }
+
+    .muted {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      border-radius: 7px;
+      padding: 10px 15px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    .primary {
+      background: var(--black);
+      color: white;
+    }
+
+    .secondary {
+      background: white;
+      border: 1px solid var(--border);
+      color: var(--black);
+    }
+
+    .danger {
+      background: #fee2e2;
+      color: var(--red);
+    }
+
+    .success {
+      background: #dcfce7;
+      color: var(--green);
+    }
+
+    .notice {
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: #fef9c3;
+      color: #854d0e;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-top: 18px;
+      overflow-wrap: anywhere;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .topline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .topline h2 { margin: 0; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(120px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .stat-number {
+      font-size: 28px;
+      font-weight: 700;
+      margin-top: 9px;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    input, select {
+      min-width: 0;
+      width: 100%;
+      padding: 11px;
+      border: 1px solid #d4d4d4;
+      border-radius: 7px;
+      background: white;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 900px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 13px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th {
+      background: #fafafa;
+      color: #525252;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 5px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      background: #eee;
+    }
+
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-approved { background: #dcfce7; color: #166534; }
+    .status-rejected { background: #fee2e2; color: #991b1b; }
+    .status-cancelled { background: #e5e7eb; color: #374151; }
+
+    .actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .actions button {
+      padding: 7px 9px;
+      font-size: 12px;
+    }
+
+    .hidden { display: none !important; }
+
+    #accountEmail {
+      color: #d4d4d4;
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 0 20px 28px;
+    }
+
+    @media (max-width: 850px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .filters { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 520px) {
+      header { padding: 18px; }
+      main { padding: 0 12px 30px; }
+      .panel { padding: 17px; }
+      .stats { grid-template-columns: 1fr 1fr; }
+      .filters { grid-template-columns: 1fr; }
     }
   </style>
 </head>
+
 <body>
   <header>
-    <h1>KK5 Admin Dashboard</h1>
-    <p>Dayasari College · Facility Booking Management</p>
+    <div>
+      <h1>KK5 Admin Dashboard</h1>
+      <p>Dayasari College · Facility Booking Management</p>
+    </div>
+
+    <div>
+      <div id="accountEmail"></div>
+      <button id="signOutBtn" class="secondary hidden"
+              onclick="signOut()">Sign out</button>
+    </div>
   </header>
+
   <main>
-    <section class="card">
-      <h2>Dashboard setup</h2>
-      <p>GitHub Pages is ready for the admin dashboard.</p>
-      <p>Authentication and booking data connection are the next steps.</p>
+    <section id="loginPanel" class="panel login-panel">
+      <h2>Administrator sign-in</h2>
+      <p class="muted">
+        Sign in with an authorised Google account to continue to the
+        KK5 facility booking management dashboard.
+      </p>
+
+      <button id="signInBtn" class="primary" onclick="signIn()">
+        Sign in with Google
+      </button>
+
+      <div id="loginMessage" class="notice">
+        Sign-in is being configured. Booking data and management actions
+        remain disabled until server-side administrator verification
+        is connected.
+      </div>
+    </section>
+
+    <section id="dashboard" class="hidden">
+      <div class="topline">
+        <div>
+          <h2>Booking overview</h2>
+          <p class="muted">Facility bookings and request management</p>
+        </div>
+        <button class="secondary" onclick="showSetupMessage()">
+          Refresh data
+        </button>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Total</div>
+          <div class="stat-number" id="totalCount">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Pending</div>
+          <div class="stat-number" id="pendingCount">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Approved</div>
+          <div class="stat-number" id="approvedCount">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Rejected</div>
+          <div class="stat-number" id="rejectedCount">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Cancelled</div>
+          <div class="stat-number" id="cancelledCount">—</div>
+        </div>
+      </div>
+
+      <section class="panel">
+        <div class="filters">
+          <input id="searchInput" placeholder="Search booking, name, purpose…"
+                 oninput="renderBookings()">
+
+          <select id="statusFilter" onchange="renderBookings()">
+            <option value="">All statuses</option>
+            <option>PENDING</option>
+            <option>APPROVED</option>
+            <option>REJECTED</option>
+            <option>CANCELLED</option>
+          </select>
+
+          <select id="facilityFilter" onchange="renderBookings()">
+            <option value="">All facilities</option>
+          </select>
+
+          <input id="dateFilter" type="date" onchange="renderBookings()">
+
+          <select id="sortFilter" onchange="renderBookings()">
+            <option value="latest">Latest added</option>
+            <option value="oldest">Oldest added</option>
+            <option value="nearest">Booking date: nearest</option>
+            <option value="furthest">Booking date: furthest</option>
+            <option value="pending">Pending first</option>
+            <option value="approved">Approved first</option>
+            <option value="rejected">Rejected first</option>
+            <option value="cancelled">Cancelled first</option>
+          </select>
+        </div>
+
+        <div class="notice">
+          Preview mode: no live booking records are loaded and no status
+          changes can be made yet. The next step is connecting the
+          authenticated backend.
+        </div>
+
+        <div class="table-wrap" style="margin-top:18px">
+          <table>
+            <thead>
+              <tr>
+                <th>Booking</th>
+                <th>Facility</th>
+                <th>Date / Time</th>
+                <th>Booker</th>
+                <th>Purpose</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="bookingRows">
+              <tr>
+                <td colspan="7" style="text-align:center;padding:32px">
+                  No live data connection yet.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
     </section>
   </main>
+
+  <footer>
+    KK5 Facility Booking System · Administration
+  </footer>
+
+  <script>
+    // Public OAuth Client ID. This is not a client secret.
+    const CLIENT_ID =
+      "707251207042-asjtjrkn4alr32hm3clsfao7tbajimlc.apps.googleusercontent.com";
+
+    let accessToken = null;
+    let tokenClient = null;
+    let signedInEmail = "";
+
+    function setMessage(message, isError = false) {
+      const el = document.getElementById("loginMessage");
+      el.textContent = message;
+      el.classList.toggle("error", isError);
+    }
+
+    function signIn() {
+      if (!window.google || !google.accounts || !google.accounts.oauth2) {
+        setMessage(
+          "Google sign-in is still loading. Please wait a moment and try again.",
+          true
+        );
+        return;
+      }
+
+      if (!tokenClient) {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: CLIENT_ID,
+          scope: "openid email profile",
+          callback: async (response) => {
+            if (response.error || !response.access_token) {
+              setMessage(
+                "Google sign-in failed. Check the OAuth client and test-user settings.",
+                true
+              );
+              return;
+            }
+
+            accessToken = response.access_token;
+
+            try {
+              const res = await fetch(
+                "https://www.googleapis.com/oauth2/v3/userinfo",
+                {
+                  headers: {
+                    Authorization: "Bearer " + accessToken
+                  }
+                }
+              );
+
+              if (!res.ok) {
+                throw new Error("Could not verify Google account.");
+              }
+
+              const user = await res.json();
+              signedInEmail = user.email || "";
+
+              // This is only a sign-in demonstration.
+              // The private dashboard stays disabled until the Apps Script
+              // backend verifies the admin on the server.
+              document.getElementById("accountEmail").textContent =
+                signedInEmail;
+
+              document.getElementById("loginPanel").classList.add("hidden");
+              document.getElementById("dashboard").classList.remove("hidden");
+              document.getElementById("signOutBtn").classList.remove("hidden");
+
+              showSetupMessage();
+            } catch (err) {
+              accessToken = null;
+              setMessage(
+                "Couldn't verify the signed-in Google account. Please try again.",
+                true
+              );
+            }
+          }
+        });
+      }
+
+      tokenClient.requestAccessToken({ prompt: "consent" });
+    }
+
+    function signOut() {
+      if (accessToken && window.google && google.accounts) {
+        google.accounts.oauth2.revoke(accessToken, () => {});
+      }
+
+      accessToken = null;
+      signedInEmail = "";
+      document.getElementById("accountEmail").textContent = "";
+      document.getElementById("dashboard").classList.add("hidden");
+      document.getElementById("loginPanel").classList.remove("hidden");
+      document.getElementById("signOutBtn").classList.add("hidden");
+      setMessage("You have signed out.");
+    }
+
+    function showSetupMessage() {
+      document.getElementById("totalCount").textContent = "—";
+      document.getElementById("pendingCount").textContent = "—";
+      document.getElementById("approvedCount").textContent = "—";
+      document.getElementById("rejectedCount").textContent = "—";
+      document.getElementById("cancelledCount").textContent = "—";
+
+      document.getElementById("bookingRows").innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align:center;padding:32px">
+            Authentication succeeded. Live bookings will appear after
+            server-side administrator verification is connected.
+          </td>
+        </tr>`;
+
+      setMessage(
+        "Signed in as " + signedInEmail +
+        ". This confirms Google sign-in only; it does not yet grant access to private bookings."
+      );
+    }
+
+    function renderBookings() {
+      // Filtering will be wired to verified live data in the next step.
+    }
+  </script>
 </body>
 </html>
 ```
