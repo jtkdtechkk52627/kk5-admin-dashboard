@@ -1,252 +1,252 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KK5 Admin Portal</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: #f5f7fa; margin: 0; color: #1f2937; }
-    .container { max-width: 1100px; margin: 0 auto; padding: 30px 20px; }
-    
-    .login-wrapper { max-width: 420px; margin: 80px auto; background: white; padding: 32px; border-radius: 14px; border: 1px solid #e5e7eb; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
-    .login-wrapper h2 { margin-top: 0; font-size: 24px; color: #111827; }
-    .login-wrapper p { color: #6b7280; font-size: 14px; margin-bottom: 24px; }
-    
-    .form-group { margin-bottom: 18px; }
-    label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; color: #374151; }
-    input, select, textarea { width: 100%; height: 46px; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 9px; font-size: 15px; outline: none; background: white; color: #111827; }
-    
-    .btn { width: 100%; height: 46px; background: #111827; color: white; border: none; border-radius: 9px; font-weight: 600; font-size: 15px; cursor: pointer; }
-    .btn:hover { background: #374151; }
-    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
-    
-    .error-msg { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 12px; border-radius: 8px; font-size: 14px; margin-top: 14px; text-align: center; }
-    .hidden { display: none !important; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KK5 Admin Portal</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: #f5f7fa; margin: 0; color: #1f2937; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 30px 20px; }
+    
+    .login-wrapper { max-width: 420px; margin: 80px auto; background: white; padding: 32px; border-radius: 14px; border: 1px solid #e5e7eb; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+    .login-wrapper h2 { margin-top: 0; font-size: 24px; color: #111827; }
+    .login-wrapper p { color: #6b7280; font-size: 14px; margin-bottom: 24px; }
+    
+    .form-group { margin-bottom: 18px; }
+    label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; color: #374151; }
+    input, select, textarea { width: 100%; height: 46px; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 9px; font-size: 15px; outline: none; background: white; color: #111827; }
+    
+    .btn { width: 100%; height: 46px; background: #111827; color: white; border: none; border-radius: 9px; font-weight: 600; font-size: 15px; cursor: pointer; }
+    .btn:hover { background: #374151; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    
+    .error-msg { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 12px; border-radius: 8px; font-size: 14px; margin-top: 14px; text-align: center; }
+    .hidden { display: none !important; }
 
-    /* Dashboard Styles */
-    .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .dashboard-header h1 { margin: 0; font-size: 28px; color: #111827; }
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
-    .stat-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 18px; text-align: center; }
-    .stat-card h3 { margin: 0 0 6px; font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
-    .stat-card .number { font-size: 24px; font-weight: 700; color: #111827; }
+    /* Dashboard Styles */
+    .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .dashboard-header h1 { margin: 0; font-size: 28px; color: #111827; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 18px; text-align: center; }
+    .stat-card h3 { margin: 0 0 6px; font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card .number { font-size: 24px; font-weight: 700; color: #111827; }
 
-    .bookings-card { background: white; border: 1px solid #e5e7eb; border-radius: 14px; padding: 20px; overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; }
-    th { background: #f9fafb; padding: 12px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; }
-    td { padding: 12px; border-bottom: 1px solid #e5e7eb; color: #4b5563; }
-    
-    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-    .badge.pending { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
-    .badge.approved { background: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
-    .badge.rejected { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; }
-    .badge.cancelled { background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
+    .bookings-card { background: white; border: 1px solid #e5e7eb; border-radius: 14px; padding: 20px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; }
+    th { background: #f9fafb; padding: 12px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; }
+    td { padding: 12px; border-bottom: 1px solid #e5e7eb; color: #4b5563; }
+    
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .badge.pending { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
+    .badge.approved { background: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
+    .badge.rejected { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; }
+    .badge.cancelled { background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
 
-    .action-select { width: auto; height: 36px; padding: 0 8px; font-size: 13px; display: inline-block; }
-    .logout-btn { background: #ef4444; width: auto; padding: 0 16px; height: 38px; font-size: 14px; }
-    .logout-btn:hover { background: #dc2626; }
-  </style>
+    .action-select { width: auto; height: 36px; padding: 0 8px; font-size: 13px; display: inline-block; }
+    .logout-btn { background: #ef4444; width: auto; padding: 0 16px; height: 38px; font-size: 14px; }
+    .logout-btn:hover { background: #dc2626; }
+  </style>
 </head>
 <body>
 
-  <!-- LOGIN VIEW -->
-  <div id="loginView" class="container">
-    <div class="login-wrapper">
-      <h2>KK5 Admin Portal</h2>
-      <p>Sign in with your administrator credentials to review and manage facility bookings.</p>
-      
-      <form id="loginForm">
-        <div class="form-group">
-          <label for="username">Username</label>
-          <input type="text" id="username" required autocomplete="username">
-        </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" required autocomplete="current-password">
-        </div>
-        <button type="submit" id="loginBtn" class="btn">Sign In</button>
-        <div id="loginError" class="error-msg hidden"></div>
-      </form>
-    </div>
-  </div>
+  <!-- LOGIN VIEW -->
+  <div id="loginView" class="container">
+    <div class="login-wrapper">
+      <h2>KK5 Admin Portal</h2>
+      <p>Sign in with your administrator credentials to review and manage facility bookings.</p>
+      
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" required autocomplete="current-password">
+        </div>
+        <button type="submit" id="loginBtn" class="btn">Sign In</button>
+        <div id="loginError" class="error-msg hidden"></div>
+      </form>
+    </div>
+  </div>
 
-  <!-- DASHBOARD VIEW -->
-  <div id="dashboardView" class="container hidden">
-    <div class="dashboard-header">
-      <div>
-        <h1>Booking Management Dashboard</h1>
-        <p style="margin:4px 0 0; color:#6b7280; font-size:14px;">Kolej Kediaman Dayasari (KK5)</p>
-      </div>
-      <button type="button" class="btn logout-btn" onclick="logoutAdmin()">Sign Out</button>
-    </div>
+  <!-- DASHBOARD VIEW -->
+  <div id="dashboardView" class="container hidden">
+    <div class="dashboard-header">
+      <div>
+        <h1>Booking Management Dashboard</h1>
+        <p style="margin:4px 0 0; color:#6b7280; font-size:14px;">Kolej Kediaman Dayasari (KK5)</p>
+      </div>
+      <button type="button" class="btn logout-btn" onclick="logoutAdmin()">Sign Out</button>
+    </div>
 
-    <div class="stats-grid">
-      <div class="stat-card"><h3>Total Bookings</h3><div id="statTotal" class="number">0</div></div>
-      <div class="stat-card"><h3>Pending Review</h3><div id="statPending" class="number" style="color:#c2410c;">0</div></div>
-      <div class="stat-card"><h3>Approved</h3><div id="statApproved" class="number" style="color:#15803d;">0</div></div>
-      <div class="stat-card"><h3>Rejected / Cancelled</h3><div id="statRejected" class="number" style="color:#b91c1c;">0</div></div>
-    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><h3>Total Bookings</h3><div id="statTotal" class="number">0</div></div>
+      <div class="stat-card"><h3>Pending Review</h3><div id="statPending" class="number" style="color:#c2410c;">0</div></div>
+      <div class="stat-card"><h3>Approved</h3><div id="statApproved" class="number" style="color:#15803d;">0</div></div>
+      <div class="stat-card"><h3>Rejected / Cancelled</h3><div id="statRejected" class="number" style="color:#b91c1c;">0</div></div>
+    </div>
 
-    <div class="bookings-card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h3 style="margin:0; font-size:18px; color:#111827;">All Facility Bookings</h3>
-        <button type="button" class="btn" style="width:auto; padding:0 14px; height:36px; font-size:13px; background:#2563eb;" onclick="loadDashboardData()">🔄 Refresh Data</button>
-      </div>
+    <div class="bookings-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="margin:0; font-size:18px; color:#111827;">All Facility Bookings</h3>
+        <button type="button" class="btn" style="width:auto; padding:0 14px; height:36px; font-size:13px; background:#2563eb;" onclick="loadDashboardData()">🔄 Refresh Data</button>
+      </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Booking ID</th>
-            <th>Facility</th>
-            <th>Booker Name</th>
-            <th>Date &amp; Time</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="bookingsTableBody">
-          <tr><td colspan="6" style="text-align:center; padding:30px; color:#6b7280;">Loading bookings...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Booking ID</th>
+            <th>Facility</th>
+            <th>Booker Name</th>
+            <th>Date &amp; Time</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="bookingsTableBody">
+          <tr><td colspan="6" style="text-align:center; padding:30px; color:#6b7280;">Loading bookings...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-  <script>
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw3n23Sg5vLufUpGZp9S6tRvbVwTbp1FvS9Fj5DYBIsXH2hriNJznl9EJEC_a9145s7/exec";
+  <script>
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw3n23Sg5vLufUpGZp9S6tRvbVwTbp1FvS9Fj5DYBIsXH2hriNJznl9EJEC_a9145s7/exec";
 
-    let currentAdmin = { username: "", password: "" };
+    let currentAdmin = { username: "", password: "" };
 
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const user = document.getElementById("username").value.trim();
-      const pass = document.getElementById("password").value.trim();
-      const errorDiv = document.getElementById("loginError");
-      const loginBtn = document.getElementById("loginBtn");
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const user = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
+      const errorDiv = document.getElementById("loginError");
+      const loginBtn = document.getElementById("loginBtn");
 
-      loginBtn.disabled = true;
-      loginBtn.textContent = "Authenticating...";
-      errorDiv.classList.add("hidden");
+      loginBtn.disabled = true;
+      loginBtn.textContent = "Authenticating...";
+      errorDiv.classList.add("hidden");
 
-      try {
-        const response = await fetch(APPS_SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "adminLogin", username: user, password: pass })
-        });
-        const result = await response.json();
-        if (!result.success) throw new Error(result.message || "Invalid credentials.");
+      try {
+        const response = await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "adminLogin", username: user, password: pass })
+        });
+        const result = await response.json();
+        if (!result.success) throw new Error(result.message || "Invalid credentials.");
 
-        currentAdmin.username = user;
-        currentAdmin.password = pass;
+        currentAdmin.username = user;
+        currentAdmin.password = pass;
 
-        document.getElementById("loginView").classList.add("hidden");
-        document.getElementById("dashboardView").classList.remove("hidden");
-        loadDashboardData();
-      } catch (err) {
-        errorDiv.textContent = err.message;
-        errorDiv.classList.remove("hidden");
-      } finally {
-        loginBtn.disabled = false;
-        loginBtn.textContent = "Sign In";
-      }
-    });
+        document.getElementById("loginView").classList.add("hidden");
+        document.getElementById("dashboardView").classList.remove("hidden");
+        loadDashboardData();
+      } catch (err) {
+        errorDiv.textContent = err.message;
+        errorDiv.classList.remove("hidden");
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Sign In";
+      }
+    });
 
-    async function loadDashboardData() {
-      try {
-        const response = await fetch(APPS_SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "getDashboard", username: currentAdmin.username, password: currentAdmin.password })
-        });
-        const result = await response.json();
-        if (!result.success) throw new Error(result.message || "Failed to load dashboard.");
+    async function loadDashboardData() {
+      try {
+        const response = await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "getDashboard", username: currentAdmin.username, password: currentAdmin.password })
+        });
+        const result = await response.json();
+        if (!result.success) throw new Error(result.message || "Failed to load dashboard.");
 
-        renderDashboard(result.data);
-      } catch (err) {
-        alert("Error loading dashboard: " + err.message);
-      }
-    }
+        renderDashboard(result.data);
+      } catch (err) {
+        alert("Error loading dashboard: " + err.message);
+      }
+    }
 
-    function renderDashboard(data) {
-      document.getElementById("statTotal").textContent = data.summary.total;
-      document.getElementById("statPending").textContent = data.summary.pending;
-      document.getElementById("statApproved").textContent = data.summary.approved;
-      document.getElementById("statRejected").textContent = data.summary.rejected + data.summary.cancelled;
+    function renderDashboard(data) {
+      document.getElementById("statTotal").textContent = data.summary.total;
+      document.getElementById("statPending").textContent = data.summary.pending;
+      document.getElementById("statApproved").textContent = data.summary.approved;
+      document.getElementById("statRejected").textContent = data.summary.rejected + data.summary.cancelled;
 
-      const tbody = document.getElementById("bookingsTableBody");
-      tbody.innerHTML = "";
+      const tbody = document.getElementById("bookingsTableBody");
+      tbody.innerHTML = "";
 
-      if (!data.bookings || data.bookings.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#6b7280;">No bookings found.</td></tr>';
-        return;
-      }
+      if (!data.bookings || data.bookings.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#6b7280;">No bookings found.</td></tr>';
+        return;
+      }
 
-      data.bookings.forEach(b => {
-        const tr = document.createElement("tr");
-        
-        const dateRangeText = b.startDate === b.endDate ? b.startDate : b.startDate + " to " + b.endDate;
-        const timeText = b.startTime + " – " + b.endTime;
+      data.bookings.forEach(b => {
+        const tr = document.createElement("tr");
+        
+        const dateRangeText = b.startDate === b.endDate ? b.startDate : b.startDate + " to " + b.endDate;
+        const timeText = b.startTime + " – " + b.endTime;
 
-        tr.innerHTML = `
-          <td><strong>${b.bookingId}</strong><br><small style="color:#6b7280;">${b.organisation}</small></td>
-          <td>${b.facility}</td>
-          <td>${b.bookerName}<br><small style="color:#6b7280;">${b.matricNumber}</small></td>
-          <td>${dateRangeText}<br><small style="color:#6b7280;">${timeText}</small></td>
-          <td><span class="badge ${b.status.toLowerCase()}">${b.status}</span></td>
-          <td>
-            <select class="action-select" onchange="updateStatus('${b.bookingId}', this.value)">
-              <option value="" disabled selected>Change Status...</option>
-              <option value="PENDING">Pending</option>
-              <option value="APPROVED">Approve</option>
-              <option value="REJECTED">Reject</option>
-              <option value="CANCELLED">Cancel</option>
-            </select>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
+        tr.innerHTML = `
+          <td><strong>${b.bookingId}</strong><br><small style="color:#6b7280;">${b.organisation}</small></td>
+          <td>${b.facility}</td>
+          <td>${b.bookerName}<br><small style="color:#6b7280;">${b.matricNumber}</small></td>
+          <td>${dateRangeText}<br><small style="color:#6b7280;">${timeText}</small></td>
+          <td><span class="badge ${b.status.toLowerCase()}">${b.status}</span></td>
+          <td>
+            <select class="action-select" onchange="updateStatus('${b.bookingId}', this.value)">
+              <option value="" disabled selected>Change Status...</option>
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approve</option>
+              <option value="REJECTED">Reject</option>
+              <option value="CANCELLED">Cancel</option>
+            </select>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
 
-    async function updateStatus(bookingId, newStatus) {
-      if (!confirm("Are you sure you want to update " + bookingId + " to " + newStatus + "?")) return;
+    async function updateStatus(bookingId, newStatus) {
+      if (!confirm("Are you sure you want to update " + bookingId + " to " + newStatus + "?")) return;
 
-      let adminNotes = "";
-      if (newStatus === "REJECTED" || newStatus === "CANCELLED") {
-        adminNotes = prompt("Enter reason / note for the booker (optional):") || "";
-      }
+      let adminNotes = "";
+      if (newStatus === "REJECTED" || newStatus === "CANCELLED") {
+        adminNotes = prompt("Enter reason / note for the booker (optional):") || "";
+      }
 
-      try {
-        const response = await fetch(APPS_SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({
-            action: "updateStatus",
-            username: currentAdmin.username,
-            password: currentAdmin.password,
-            bookingId: bookingId,
-            status: newStatus,
-            adminNotes: adminNotes
-          })
-        });
-        const result = await response.json();
-        if (!result.success) throw new Error(result.message || "Failed to update status.");
+      try {
+        const response = await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "updateStatus",
+            username: currentAdmin.username,
+            password: currentAdmin.password,
+            bookingId: bookingId,
+            status: newStatus,
+            adminNotes: adminNotes
+          })
+        });
+        const result = await response.json();
+        if (!result.success) throw new Error(result.message || "Failed to update status.");
 
-        alert("Booking " + bookingId + " successfully updated to " + newStatus);
-        loadDashboardData();
-      } catch (err) {
-        alert("Error updating status: " + err.message);
-        loadDashboardData();
-      }
-    }
+        alert("Booking " + bookingId + " successfully updated to " + newStatus);
+        loadDashboardData();
+      } catch (err) {
+        alert("Error updating status: " + err.message);
+        loadDashboardData();
+      }
+    }
 
-    function logoutAdmin() {
-      currentAdmin = { username: "", password: "" };
-      document.getElementById("dashboardView").classList.add("hidden");
-      document.getElementById("loginView").classList.remove("hidden");
-      document.getElementById("username").value = "";
-      document.getElementById("password").value = "";
-    }
-  </script>
+    function logoutAdmin() {
+      currentAdmin = { username: "", password: "" };
+      document.getElementById("dashboardView").classList.add("hidden");
+      document.getElementById("loginView").classList.remove("hidden");
+      document.getElementById("username").value = "";
+      document.getElementById("password").value = "";
+    }
+  </script>
 </body>
 </html>
