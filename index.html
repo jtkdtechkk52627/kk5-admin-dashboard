@@ -18,8 +18,8 @@
 
     * { box-sizing: border-box; }
     body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg-color); margin: 0; color: var(--text-main); }
-    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-    @media (min-width: 768px) { .container { padding: 40px 20px; } }
+    .container { width: 100%; max-width: 1280px; margin: 0 auto; padding: 20px; }
+    @media (min-width: 768px) { .container { padding: 30px 20px; } }
 
     /* Login Box */
     .login-wrapper { max-width: 400px; margin: 80px auto; background: var(--card-bg); padding: 28px; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
@@ -52,7 +52,7 @@
     .stat-card h3 { margin: 0 0 6px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
     .stat-card .number { font-size: 24px; font-weight: 700; color: var(--text-main); }
 
-    .content-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+    .content-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); overflow: hidden; }
     @media (min-width: 768px) { .content-card { padding: 24px; } }
     
     /* Toolbar controls */
@@ -64,7 +64,7 @@
     @media (min-width: 768px) { .toolbar-group { width: auto; } }
     .toolbar select, .toolbar input { height: 40px; font-size: 13px; padding: 0 12px; }
     .search-input { width: 100%; }
-    @media (min-width: 768px) { .search-input { width: 240px; } }
+    @media (min-width: 768px) { .search-input { width: 280px; } }
 
     /* Filter Tabs */
     .filter-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
@@ -72,12 +72,13 @@
     .tab-btn:hover { background: #f1f5f9; color: var(--text-main); }
     .tab-btn.active { background: #e0f2fe; color: #0369a1; }
 
-    /* Responsive Table / Cards Switcher */
-    .desktop-table { display: none; width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; }
+    /* Table Formatting */
+    .table-container { width: 100%; overflow-x: auto; }
+    .desktop-table { display: none; width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; table-layout: fixed; }
     @media (min-width: 900px) { .desktop-table { display: table; } }
     
-    .desktop-table th { background: #f8fafc; padding: 12px 16px; font-weight: 600; color: #475569; border-bottom: 1px solid var(--border-color); font-size: 13px; }
-    .desktop-table td { padding: 16px; border-bottom: 1px solid var(--border-color); color: #334155; vertical-align: middle; }
+    .desktop-table th { background: #f8fafc; padding: 12px; font-weight: 600; color: #475569; border-bottom: 1px solid var(--border-color); font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .desktop-table td { padding: 14px 12px; border-bottom: 1px solid var(--border-color); color: #334155; vertical-align: middle; word-wrap: break-word; overflow-wrap: break-word; }
     .desktop-table tr:hover td { background: #fafafa; }
 
     /* Mobile Cards View */
@@ -96,7 +97,7 @@
     .badge.rejected { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; }
     .badge.cancelled { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
 
-    .action-select { width: 130px; height: 36px; padding: 0 8px; font-size: 13px; font-weight: 500; }
+    .action-select { width: 120px; height: 34px; padding: 0 6px; font-size: 12px; font-weight: 500; }
     .logout-btn { background: #ef4444; width: auto; padding: 0 16px; height: 38px; font-size: 13px; }
     .logout-btn:hover { background: #dc2626; }
     .btn-secondary { background: #fff; color: var(--text-main); border: 1px solid var(--border-color); width: auto; padding: 0 14px; height: 38px; font-size: 13px; }
@@ -170,21 +171,23 @@
       </div>
 
       <!-- Desktop Table View -->
-      <table class="desktop-table">
-        <thead>
-          <tr>
-            <th>Reference</th>
-            <th>Facility &amp; Purpose</th>
-            <th>Booker Details</th>
-            <th>Date &amp; Time</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="desktopTableBody">
-          <tr><td colspan="6" style="text-align:center; padding:40px; color:var(--text-muted);">Loading bookings...</td></tr>
-        </tbody>
-      </table>
+      <div class="table-container">
+        <table class="desktop-table">
+          <thead>
+            <tr>
+              <th style="width: 15%;">Reference</th>
+              <th style="width: 20%;">Facility &amp; Purpose</th>
+              <th style="width: 20%;">Booker Details</th>
+              <th style="width: 25%;">Date &amp; Time</th>
+              <th style="width: 10%;">Status</th>
+              <th style="width: 10%;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="desktopTableBody">
+            <tr><td colspan="6" style="text-align:center; padding:40px; color:var(--text-muted);">Loading bookings...</td></tr>
+          </tbody>
+        </table>
+      </div>
 
       <!-- Mobile Cards View -->
       <div id="mobileCardsContainer" class="mobile-cards">
@@ -199,6 +202,28 @@
     let currentAdmin = { username: "", password: "" };
     let cachedBookings = [];
     let currentStatusFilter = "ALL";
+
+    function formatDateDisplay(dateVal) {
+      if (!dateVal) return "N/A";
+      try {
+        const d = new Date(dateVal);
+        if (isNaN(d.getTime())) return String(dateVal);
+        return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+      } catch (e) {
+        return String(dateVal);
+      }
+    }
+
+    function formatTimeDisplay(timeVal) {
+      if (!timeVal) return "";
+      if (typeof timeVal === "string" && timeVal.includes("T")) {
+        try {
+          const d = new Date(timeVal);
+          if (!isNaN(d.getTime())) return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+        } catch (e) {}
+      }
+      return String(timeVal);
+    }
 
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -318,8 +343,13 @@
       }
 
       filtered.forEach(b => {
-        const dateRangeText = b.startDate === b.endDate ? b.startDate : b.startDate + " to " + b.endDate;
-        const timeText = b.startTime + " – " + b.endTime;
+        const startDateFormatted = formatDateDisplay(b.startDate);
+        const endDateFormatted = formatDateDisplay(b.endDate);
+        const startTimeFormatted = formatTimeDisplay(b.startTime);
+        const endTimeFormatted = formatTimeDisplay(b.endTime);
+
+        const dateRangeText = startDateFormatted === endDateFormatted ? startDateFormatted : startDateFormatted + " to " + endDateFormatted;
+        const timeText = startTimeFormatted && endTimeFormatted ? startTimeFormatted + " – " + endTimeFormatted : "";
 
         // Populate Desktop Table Row
         const tr = document.createElement("tr");
@@ -331,7 +361,7 @@
           <td><span class="badge ${b.status.toLowerCase()}">${b.status}</span></td>
           <td>
             <select class="action-select" onchange="updateStatus('${b.bookingId}', this.value)">
-              <option value="" disabled selected>Update Status</option>
+              <option value="" disabled selected>Update Stz</option>
               <option value="PENDING">Set Pending</option>
               <option value="APPROVED">Approve</option>
               <option value="REJECTED">Reject</option>
@@ -356,12 +386,12 @@
             <div><strong>Facility:</strong> ${b.facility}</div>
             <div><strong>Purpose:</strong> ${b.purpose || "N/A"}</div>
             <div><strong>Booker:</strong> ${b.bookerName} (${b.matricNumber})</div>
-            <div><strong>Date:</strong> ${dateRangeText} (${timeText})</div>
+            <div><strong>Date:</strong> ${dateRangeText} ${timeText ? "(" + timeText + ")" : ""}</div>
           </div>
           <div class="booking-card-footer">
             <span style="font-size:11px; color:var(--text-muted);">Manage status:</span>
             <select class="action-select" onchange="updateStatus('${b.bookingId}', this.value)">
-              <option value="" disabled selected>Update Status</option>
+              <option value="" disabled selected>Update Stz</option>
               <option value="PENDING">Set Pending</option>
               <option value="APPROVED">Approve</option>
               <option value="REJECTED">Reject</option>
