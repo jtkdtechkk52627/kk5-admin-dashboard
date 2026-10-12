@@ -3,49 +3,80 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KK5 Admin Portal</title>
+  <title>KK5 Admin Portal | Facility Management</title>
   <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --primary: #0f172a;
+      --primary-hover: #1e293b;
+      --accent: #2563eb;
+    }
+
     * { box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: #f5f7fa; margin: 0; color: #1f2937; }
-    .container { max-width: 1100px; margin: 0 auto; padding: 30px 20px; }
-    
-    .login-wrapper { max-width: 420px; margin: 80px auto; background: white; padding: 32px; border-radius: 14px; border: 1px solid #e5e7eb; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
-    .login-wrapper h2 { margin-top: 0; font-size: 24px; color: #111827; }
-    .login-wrapper p { color: #6b7280; font-size: 14px; margin-bottom: 24px; }
-    
-    .form-group { margin-bottom: 18px; }
-    label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; color: #374151; }
-    input, select, textarea { width: 100%; height: 46px; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 9px; font-size: 15px; outline: none; background: white; color: #111827; }
-    
-    .btn { width: 100%; height: 46px; background: #111827; color: white; border: none; border-radius: 9px; font-weight: 600; font-size: 15px; cursor: pointer; }
-    .btn:hover { background: #374151; }
-    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
-    
-    .error-msg { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 12px; border-radius: 8px; font-size: 14px; margin-top: 14px; text-align: center; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg-color); margin: 0; color: var(--text-main); }
+    .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+
+    /* Login Box */
+    .login-wrapper { max-width: 400px; margin: 100px auto; background: var(--card-bg); padding: 36px; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
+    .login-wrapper h2 { margin-top: 0; font-size: 22px; font-weight: 700; color: var(--text-main); }
+    .login-wrapper p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+
+    .form-group { margin-bottom: 20px; }
+    label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 8px; color: #334155; text-transform: uppercase; letter-spacing: 0.05em; }
+    input, select, textarea { width: 100%; height: 44px; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 14px; outline: none; background: #fff; color: var(--text-main); transition: border-color 0.2s; }
+    input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+    .btn { width: 100%; height: 44px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s; }
+    .btn:hover { background: var(--primary-hover); }
+    .btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+    .error-msg { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 12px; border-radius: 10px; font-size: 13px; margin-top: 16px; text-align: center; }
     .hidden { display: none !important; }
 
-    /* Dashboard Styles */
-    .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .dashboard-header h1 { margin: 0; font-size: 28px; color: #111827; }
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
-    .stat-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 18px; text-align: center; }
-    .stat-card h3 { margin: 0 0 6px; font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
-    .stat-card .number { font-size: 24px; font-weight: 700; color: #111827; }
+    /* Dashboard UI */
+    .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; }
+    .dashboard-header h1 { margin: 0; font-size: 24px; font-weight: 700; }
+    .dashboard-header p { margin: 4px 0 0; color: var(--text-muted); font-size: 13px; }
 
-    .bookings-card { background: white; border: 1px solid #e5e7eb; border-radius: 14px; padding: 20px; overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; }
-    th { background: #f9fafb; padding: 12px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; }
-    td { padding: 12px; border-bottom: 1px solid #e5e7eb; color: #4b5563; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 30px; }
+    .stat-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+    .stat-card h3 { margin: 0 0 8px; font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+    .stat-card .number { font-size: 28px; font-weight: 700; color: var(--text-main); }
+
+    .content-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
     
-    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    /* Toolbar controls */
+    .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 12px; flex-wrap: wrap; }
+    .toolbar-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .toolbar select, .toolbar input { height: 38px; font-size: 13px; padding: 0 12px; }
+    .search-input { width: 240px; }
+
+    /* Filter Tabs */
+    .filter-tabs { display: flex; gap: 6px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
+    .tab-btn { background: none; border: none; padding: 6px 14px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 6px; transition: all 0.2s; }
+    .tab-btn:hover { background: #f1f5f9; color: var(--text-main); }
+    .tab-btn.active { background: #e0f2fe; color: #0369a1; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; }
+    th { background: #f8fafc; padding: 12px 16px; font-weight: 600; color: #475569; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+    td { padding: 16px; border-bottom: 1px solid var(--border-color); color: #334155; vertical-align: middle; }
+    tr:hover td { background: #fafafa; }
+
+    .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
     .badge.pending { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
     .badge.approved { background: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
     .badge.rejected { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; }
-    .badge.cancelled { background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
+    .badge.cancelled { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
 
-    .action-select { width: auto; height: 36px; padding: 0 8px; font-size: 13px; display: inline-block; }
-    .logout-btn { background: #ef4444; width: auto; padding: 0 16px; height: 38px; font-size: 14px; }
+    .action-select { width: 140px; height: 36px; padding: 0 10px; font-size: 13px; font-weight: 500; }
+    .logout-btn { background: #ef4444; width: auto; padding: 0 18px; height: 38px; font-size: 13px; }
     .logout-btn:hover { background: #dc2626; }
+    .btn-secondary { background: #fff; color: var(--text-main); border: 1px solid var(--border-color); width: auto; padding: 0 16px; height: 38px; font-size: 13px; }
+    .btn-secondary:hover { background: #f1f5f9; }
   </style>
 </head>
 <body>
@@ -54,18 +85,18 @@
   <div id="loginView" class="container">
     <div class="login-wrapper">
       <h2>KK5 Admin Portal</h2>
-      <p>Sign in with your administrator credentials to review and manage facility bookings.</p>
+      <p>Secure management system for Kolej Kediaman Dayasari facility reservations.</p>
       
       <form id="loginForm">
         <div class="form-group">
           <label for="username">Username</label>
-          <input type="text" id="username" required autocomplete="username">
+          <input type="text" id="username" required autocomplete="username" placeholder="Enter admin username">
         </div>
         <div class="form-group">
           <label for="password">Password</label>
-          <input type="password" id="password" required autocomplete="current-password">
+          <input type="password" id="password" required autocomplete="current-password" placeholder="••••••••••••">
         </div>
-        <button type="submit" id="loginBtn" class="btn">Sign In</button>
+        <button type="submit" id="loginBtn" class="btn">Sign In to Dashboard</button>
         <div id="loginError" class="error-msg hidden"></div>
       </form>
     </div>
@@ -75,8 +106,8 @@
   <div id="dashboardView" class="container hidden">
     <div class="dashboard-header">
       <div>
-        <h1>Booking Management Dashboard</h1>
-        <p style="margin:4px 0 0; color:#6b7280; font-size:14px;">Kolej Kediaman Dayasari (KK5)</p>
+        <h1>Dashboard & Requests</h1>
+        <p>Kolej Kediaman Kelima (Dayasari), Universiti Malaya</p>
       </div>
       <button type="button" class="btn logout-btn" onclick="logoutAdmin()">Sign Out</button>
     </div>
@@ -88,34 +119,56 @@
       <div class="stat-card"><h3>Rejected / Cancelled</h3><div id="statRejected" class="number" style="color:#b91c1c;">0</div></div>
     </div>
 
-    <div class="bookings-card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h3 style="margin:0; font-size:18px; color:#111827;">All Facility Bookings</h3>
-        <button type="button" class="btn" style="width:auto; padding:0 14px; height:36px; font-size:13px; background:#2563eb;" onclick="loadDashboardData()">🔄 Refresh Data</button>
+    <div class="content-card">
+      <!-- Status Filter Tabs -->
+      <div class="filter-tabs">
+        <button type="button" class="tab-btn active" onclick="setStatusFilter('ALL', this)">All Requests</button>
+        <button type="button" class="tab-btn" onclick="setStatusFilter('PENDING', this)">Pending Review</button>
+        <button type="button" class="tab-btn" onclick="setStatusFilter('APPROVED', this)">Approved</button>
+        <button type="button" class="tab-btn" onclick="setStatusFilter('REJECTED', this)">Rejected / Cancelled</button>
+      </div>
+
+      <!-- Toolbar Search & Sorting -->
+      <div class="toolbar">
+        <div class="toolbar-group">
+          <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search name, ID, facility..." oninput="renderBookings()">
+        </div>
+        <div class="toolbar-group">
+          <label for="sortSelect" style="margin:0; font-size:12px; color:var(--text-muted);">Sort By:</label>
+          <select id="sortSelect" onchange="renderBookings()">
+            <option value="newest">Newest Submission</option>
+            <option value="oldest">Oldest Submission</option>
+            <option value="date_asc">Event Date (Soonest)</option>
+            <option value="status">Status Priority</option>
+          </select>
+          <button type="button" class="btn btn-secondary" onclick="loadDashboardData()">🔄 Refresh</button>
+        </div>
       </div>
 
       <table>
         <thead>
           <tr>
-            <th>Booking ID</th>
-            <th>Facility</th>
-            <th>Booker Name</th>
-            <th>Date &amp; Time</th>
+            <th>Booking Reference</th>
+            <th>Facility &amp; Purpose</th>
+            <th>Booker Details</th>
+            <th>Reserved Date &amp; Time</th>
             <th>Status</th>
             <th>Action</th>
           </tr>
         </thead>
         <tbody id="bookingsTableBody">
-          <tr><td colspan="6" style="text-align:center; padding:30px; color:#6b7280;">Loading bookings...</td></tr>
+          <tr><td colspan="6" style="text-align:center; padding:40px; color:var(--text-muted);">Loading bookings...</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
   <script>
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw3n23Sg5vLufUpGZp9S6tRvbVwTbp1FvS9Fj5DYBIsXH2hriNJznl9EJEC_a9145s7/exec";
+    const APPS_SCRIPT_URL = "YOUR_WEB_APP_URL_HERE";
 
     let currentAdmin = { username: "", password: "" };
+    let cachedBookings = [];
+    let currentStatusFilter = "ALL";
 
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -148,7 +201,7 @@
         errorDiv.classList.remove("hidden");
       } finally {
         loginBtn.disabled = false;
-        loginBtn.textContent = "Sign In";
+        loginBtn.textContent = "Sign In to Dashboard";
       }
     });
 
@@ -162,42 +215,89 @@
         const result = await response.json();
         if (!result.success) throw new Error(result.message || "Failed to load dashboard.");
 
-        renderDashboard(result.data);
+        cachedBookings = result.data.bookings || [];
+        updateSummaryStats(result.data.summary);
+        renderBookings();
       } catch (err) {
         alert("Error loading dashboard: " + err.message);
       }
     }
 
-    function renderDashboard(data) {
-      document.getElementById("statTotal").textContent = data.summary.total;
-      document.getElementById("statPending").textContent = data.summary.pending;
-      document.getElementById("statApproved").textContent = data.summary.approved;
-      document.getElementById("statRejected").textContent = data.summary.rejected + data.summary.cancelled;
+    function updateSummaryStats(summary) {
+      document.getElementById("statTotal").textContent = summary.total;
+      document.getElementById("statPending").textContent = summary.pending;
+      document.getElementById("statApproved").textContent = summary.approved;
+      document.getElementById("statRejected").textContent = summary.rejected + summary.cancelled;
+    }
 
+    function setStatusFilter(status, btn) {
+      currentStatusFilter = status;
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      renderBookings();
+    }
+
+    function renderBookings() {
       const tbody = document.getElementById("bookingsTableBody");
+      const searchQuery = document.getElementById("searchInput").value.toLowerCase().trim();
+      const sortBy = document.getElementById("sortSelect").value;
+
+      // 1. Filter by Status Tab
+      let filtered = cachedBookings.filter(b => {
+        if (currentStatusFilter === "ALL") return true;
+        if (currentStatusFilter === "REJECTED") return b.status === "REJECTED" || b.status === "CANCELLED";
+        return b.status === currentStatusFilter;
+      });
+
+      // 2. Filter by Search Query
+      if (searchQuery) {
+        filtered = filtered.filter(b => 
+          (b.bookingId && b.bookingId.toLowerCase().includes(searchQuery)) ||
+          (b.facility && b.facility.toLowerCase().includes(searchQuery)) ||
+          (b.bookerName && b.bookerName.toLowerCase().includes(searchQuery)) ||
+          (b.matricNumber && b.matricNumber.toLowerCase().includes(searchQuery)) ||
+          (b.organisation && b.organisation.toLowerCase().includes(searchQuery)) ||
+          (b.purpose && b.purpose.toLowerCase().includes(searchQuery))
+        );
+      }
+
+      // 3. Sort Records
+      filtered.sort((a, b) => {
+        if (sortBy === "newest") {
+          return new Date(b.timestamp) - new Date(a.timestamp);
+        } else if (sortBy === "oldest") {
+          return new Date(a.timestamp) - new Date(b.timestamp);
+        } else if (sortBy === "date_asc") {
+          return new Date(a.startDate) - new Date(b.startDate);
+        } else if (sortBy === "status") {
+          const weights = { PENDING: 1, APPROVED: 2, REJECTED: 3, CANCELLED: 4 };
+          return (weights[a.status] || 5) - (weights[b.status] || 5);
+        }
+        return 0;
+      });
+
       tbody.innerHTML = "";
 
-      if (!data.bookings || data.bookings.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#6b7280;">No bookings found.</td></tr>';
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:var(--text-muted);">No matching bookings found.</td></tr>';
         return;
       }
 
-      data.bookings.forEach(b => {
+      filtered.forEach(b => {
         const tr = document.createElement("tr");
-        
         const dateRangeText = b.startDate === b.endDate ? b.startDate : b.startDate + " to " + b.endDate;
         const timeText = b.startTime + " – " + b.endTime;
 
         tr.innerHTML = `
-          <td><strong>${b.bookingId}</strong><br><small style="color:#6b7280;">${b.organisation}</small></td>
-          <td>${b.facility}</td>
-          <td>${b.bookerName}<br><small style="color:#6b7280;">${b.matricNumber}</small></td>
-          <td>${dateRangeText}<br><small style="color:#6b7280;">${timeText}</small></td>
+          <td><strong>${b.bookingId}</strong><br><span style="font-size:12px; color:var(--text-muted);">${b.organisation || "Individual"}</span></td>
+          <td><strong>${b.facility}</strong><br><span style="font-size:12px; color:var(--text-muted);">${b.purpose || "No purpose provided"}</span></td>
+          <td>${b.bookerName}<br><span style="font-size:12px; color:var(--text-muted);">${b.matricNumber}</span></td>
+          <td>${dateRangeText}<br><span style="font-size:12px; color:var(--text-muted);">${timeText}</span></td>
           <td><span class="badge ${b.status.toLowerCase()}">${b.status}</span></td>
           <td>
             <select class="action-select" onchange="updateStatus('${b.bookingId}', this.value)">
-              <option value="" disabled selected>Change Status...</option>
-              <option value="PENDING">Pending</option>
+              <option value="" disabled selected>Update Status</option>
+              <option value="PENDING">Set Pending</option>
               <option value="APPROVED">Approve</option>
               <option value="REJECTED">Reject</option>
               <option value="CANCELLED">Cancel</option>
@@ -209,11 +309,14 @@
     }
 
     async function updateStatus(bookingId, newStatus) {
-      if (!confirm("Are you sure you want to update " + bookingId + " to " + newStatus + "?")) return;
+      if (!confirm("Are you sure you want to update " + bookingId + " to " + newStatus + "?")) {
+        renderBookings(); // Reset dropdown selection
+        return;
+      }
 
       let adminNotes = "";
       if (newStatus === "REJECTED" || newStatus === "CANCELLED") {
-        adminNotes = prompt("Enter reason / note for the booker (optional):") || "";
+        adminNotes = prompt("Enter a reason / note for the applicant (optional):") || "";
       }
 
       try {
@@ -232,7 +335,7 @@
         const result = await response.json();
         if (!result.success) throw new Error(result.message || "Failed to update status.");
 
-        alert("Booking " + bookingId + " successfully updated to " + newStatus);
+        alert("Booking " + bookingId + " successfully changed to " + newStatus);
         loadDashboardData();
       } catch (err) {
         alert("Error updating status: " + err.message);
@@ -242,6 +345,7 @@
 
     function logoutAdmin() {
       currentAdmin = { username: "", password: "" };
+      cachedBookings = [];
       document.getElementById("dashboardView").classList.add("hidden");
       document.getElementById("loginView").classList.remove("hidden");
       document.getElementById("username").value = "";
