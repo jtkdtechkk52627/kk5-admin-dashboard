@@ -161,7 +161,7 @@
         <div id="lastSyncNotice" style="font-size: 12px; color: #38bdf8; margin-top: 6px;">Last synced: Never</div>
       </div>
       <div style="display:flex; gap:10px; align-items:center;">
-        <button type="button" class="btn-refresh" onclick="refreshCurrentTab()">🔄 Refresh</button>
+        <button type="button" class="btn-refresh" onclick="refreshAllData()">🔄 Refresh Data</button>
         <button type="button" class="btn-refresh" style="background:#ef4444; color:white;" onclick="logoutAdmin()">Sign Out</button>
       </div>
     </div>
@@ -256,7 +256,7 @@
 
     <!-- FACILITIES MANAGEMENT VIEW -->
     <div id="facilitiesManagementView" class="table-card hidden">
-      <div style="display: flex; flex-direction: column; md-row; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
+      <div style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
         <div>
           <h3 style="margin:0 0 4px; font-size:16px; color:#0f172a;">Facility Availability & Closure Notices</h3>
           <p style="font-size:13px; color:#64748b; margin:0;">Toggle facilities active/inactive and provide reasons for maintenance or closures.</p>
@@ -305,6 +305,7 @@
     let cachedBookings = [];
     let cachedFacilities = [];
     let activeTab = "bookings";
+    let dataLoaded = false;
 
     function showLoading(text = "Processing request...") {
       document.getElementById("loadingText").textContent = text;
@@ -322,7 +323,6 @@
       document.getElementById("lastSyncNotice").textContent = `Last synced: ${dateString} at ${timeString}`;
     }
 
-    // Reliable Fetch Wrapper with Automatic Retry & Loading Overlay
     async function callApiWithRetry(payload, retries = 3, delay = 1000) {
       for (let i = 0; i < retries; i++) {
         try {
@@ -362,7 +362,9 @@
 
         document.getElementById("loginView").classList.add("hidden");
         document.getElementById("dashboardView").classList.remove("hidden");
-        await loadDashboardData();
+        
+        // Fetch all initial data at once to populate cache
+        await fetchAllData();
       } catch (err) {
         errorDiv.textContent = err.message;
         errorDiv.classList.remove("hidden");
@@ -372,6 +374,44 @@
         loginBtn.textContent = "Sign In";
       }
     });
+
+    async function fetchAllData() {
+      showLoading("Syncing dashboard data...");
+      try {
+        const [dashRes, facRes] = await Promise.all([
+          callApiWithRetry({ action: "getDashboard", username: currentAdmin.username, password: currentAdmin.password }),
+          callApiWithRetry({ action: "getAdminFacilities", username: currentAdmin.username, password: currentAdmin.password })
+        ]);
+
+        if (!dashRes.success) throw new Error(dashRes.message || "Failed to load bookings.");
+        if (!facRes.success) throw new Error(facRes.message || "Failed to load facilities.");
+
+        cachedBookings = dashRes.data.bookings || [];
+        updateSummaryStats(dashRes.data.summary);
+        populateFilterDropdowns();
+
+        cachedFacilities = facRes.data || [];
+
+        dataLoaded = true;
+        updateLastSyncTimestamp();
+
+        // Render whichever tab is currently active instantly from cache
+        if (activeTab === 'bookings') {
+          renderBookings();
+        } else {
+          renderFacilities();
+        }
+      } catch (err) {
+        alert("Error syncing data: " + err.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    async function refreshAllData() {
+      await fetchAllData();
+      alert("Data refreshed successfully!");
+    }
 
     function switchTab(tabName) {
       activeTab = tabName;
@@ -389,7 +429,7 @@
         facilitiesView.classList.add('hidden');
         btnBookings.style.background = '#0f172a'; btnBookings.style.color = 'white';
         btnFacilities.style.background = '#ffffff'; btnFacilities.style.color = '#0f172a';
-        renderBookings();
+        renderBookings(); // Instant render from cache
       } else {
         statsSection.style.display = 'none';
         filterSection.style.display = 'none';
@@ -397,52 +437,7 @@
         facilitiesView.classList.remove('hidden');
         btnFacilities.style.background = '#0f172a'; btnFacilities.style.color = 'white';
         btnBookings.style.background = '#ffffff'; btnBookings.style.color = '#0f172a';
-        loadAdminFacilities();
-      }
-    }
-
-    async function refreshCurrentTab() {
-      if (activeTab === 'bookings') {
-        await loadDashboardData();
-      } else {
-        await loadAdminFacilities();
-      }
-    }
-
-    async function loadDashboardData() {
-      showLoading("Loading bookings & statistics...");
-      try {
-        const result = await callApiWithRetry({ action: "getDashboard", username: currentAdmin.username, password: currentAdmin.password });
-        if (!result.success) throw new Error(result.message || "Failed to load dashboard.");
-
-        cachedBookings = result.data.bookings || [];
-        updateSummaryStats(result.data.summary);
-        populateFilterDropdowns();
-        renderBookings();
-        updateLastSyncTimestamp();
-      } catch (err) {
-        alert("Error loading dashboard: " + err.message);
-      } finally {
-        hideLoading();
-      }
-    }
-
-    async function loadAdminFacilities() {
-      showLoading("Loading facilities list...");
-      try {
-        const result = await callApiWithRetry({ action: "getAdminFacilities", username: currentAdmin.username, password: currentAdmin.password });
-        if (!result.success) throw new Error(result.message);
-
-        cachedFacilities = result.data || [];
-        renderFacilities();
-        updateLastSyncTimestamp();
-      } catch (err) {
-        const tbody = document.getElementById("facilitiesTableBody");
-        const mobileContainer = document.getElementById("mobileFacilitiesContainer");
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Error loading facilities: ${err.message}</td></tr>`;
-        mobileContainer.innerHTML = `<div style="text-align:center; color:red; padding:20px;">Error loading facilities: ${err.message}</div>`;
-      } finally {
-        hideLoading();
+        renderFacilities(); // Instant render from cache
       }
     }
 
@@ -533,7 +528,6 @@
       }
     }
 
-    // Keep mobile and desktop inputs in sync seamlessly
     function syncFacilityStatus(rowNumber, val) {
       const desktopSel = document.getElementById(`status_${rowNumber}`);
       if (desktopSel) { desktopSel.value = val; updateSelectColor(desktopSel); }
@@ -562,7 +556,7 @@
         });
         if (!result.success) throw new Error(result.message);
         alert("Facility updated successfully!");
-        await loadAdminFacilities();
+        await fetchAllData(); // Re-sync cache
       } catch (err) {
         alert("Failed to update facility: " + err.message);
       } finally {
@@ -760,10 +754,10 @@
         if (!result.success) throw new Error(result.message || "Failed to update status.");
 
         alert("Booking " + bookingId + " updated to " + newStatus);
-        await loadDashboardData();
+        await fetchAllData(); // Re-sync cache
       } catch (err) {
         alert("Error updating status: " + err.message);
-        await loadDashboardData();
+        renderBookings();
       } finally {
         hideLoading();
       }
@@ -773,6 +767,7 @@
       currentAdmin = { username: "", password: "" };
       cachedBookings = [];
       cachedFacilities = [];
+      dataLoaded = false;
       document.getElementById("dashboardView").classList.add("hidden");
       document.getElementById("loginView").classList.remove("hidden");
       document.getElementById("username").value = "";
