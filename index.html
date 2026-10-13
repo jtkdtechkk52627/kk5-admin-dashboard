@@ -15,11 +15,12 @@
     }
 
     * { box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: var(--bg-color); margin: 0; padding: 20px; color: var(--text-main); }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: var(--bg-color); margin: 0; padding: 12px; color: var(--text-main); }
+    @media (min-width: 768px) { body { padding: 20px; } }
     .container { max-width: 1400px; margin: 0 auto; }
 
     /* Login Screen */
-    .login-box { max-width: 380px; margin: 80px auto; background: white; padding: 32px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+    .login-box { max-width: 380px; margin: 80px auto; background: white; padding: 24px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
     .login-box h2 { margin-top: 0; font-size: 22px; color: #0f172a; }
     .login-box p { color: #64748b; font-size: 13px; margin-bottom: 20px; }
     .form-group { margin-bottom: 16px; }
@@ -31,30 +32,46 @@
     .hidden { display: none !important; }
 
     /* Hero Banner */
-    .hero-banner { background: var(--dark-banner); color: white; border-radius: 14px; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .hero-banner h1 { margin: 0; font-size: 24px; font-weight: 700; }
+    .hero-banner { background: var(--dark-banner); color: white; border-radius: 14px; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+    @media (min-width: 640px) { .hero-banner { flex-direction: row; justify-content: space-between; align-items: center; padding: 20px 24px; } }
+    .hero-banner h1 { margin: 0; font-size: 22px; font-weight: 700; }
     .hero-banner p { margin: 4px 0 0; color: #94a3b8; font-size: 13px; }
     .btn-refresh { background: #ffffff; color: #0f172a; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; }
     .btn-refresh:hover { background: #f1f5f9; }
 
     /* Stat Cards */
-    .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 16px; }
-    .stat-card { background: white; border-radius: 12px; padding: 16px; border: 1px solid #e2e8f0; }
-    .stat-card h3 { margin: 0 0 6px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
-    .stat-card .number { font-size: 26px; font-weight: 800; color: #0f172a; }
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+    @media (min-width: 768px) { .stats-grid { grid-template-columns: repeat(5, 1fr); gap: 12px; } }
+    .stat-card { background: white; border-radius: 12px; padding: 14px; border: 1px solid #e2e8f0; }
+    .stat-card h3 { margin: 0 0 4px; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+    .stat-card .number { font-size: 22px; font-weight: 800; color: #0f172a; }
 
     /* Filter Toolbar Container */
-    .filter-card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid #e2e8f0; }
-    .filter-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr; gap: 10px; align-items: flex-end; }
+    .filter-card { background: white; border-radius: 12px; padding: 14px; margin-bottom: 16px; border: 1px solid #e2e8f0; }
+    .filter-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    @media (min-width: 768px) { .filter-grid { grid-template-columns: repeat(3, 1fr); align-items: flex-end; } }
+    @media (min-width: 1200px) { .filter-grid { grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr; } }
     .filter-item { display: flex; flex-direction: column; gap: 4px; }
 
-    /* Table Container with Controlled Widths */
-    .table-card { background: white; border-radius: 12px; padding: 16px; border: 1px solid #e2e8f0; overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; table-layout: fixed; }
+    /* Responsive Table / Cards Switcher */
+    .table-card { background: white; border-radius: 12px; padding: 14px; border: 1px solid #e2e8f0; }
     
+    /* Desktop Table */
+    .desktop-table-wrapper { display: none; overflow-x: auto; }
+    @media (min-width: 900px) { .desktop-table-wrapper { display: block; } }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; table-layout: fixed; }
     th { padding: 12px 10px; font-weight: 700; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #f1f5f9; }
     td { padding: 14px 10px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: top; word-break: break-word; }
     tr:hover td { background: #f8fafc; }
+
+    /* Mobile Cards View */
+    .mobile-cards-container { display: flex; flex-direction: column; gap: 12px; }
+    @media (min-width: 900px) { .mobile-cards-container { display: none; } }
+    .booking-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+    .booking-card-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+    .booking-card-body { font-size: 13px; color: var(--text-muted); display: grid; gap: 4px; }
+    .booking-card-body strong { color: var(--text-main); }
+    .booking-card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 8px; margin-top: 4px; }
 
     /* Badges & Tags */
     .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
@@ -64,12 +81,7 @@
     .badge.cancelled { background: #e2e3e5; color: #383d41; }
 
     .jkp-tag { display: inline-block; background: #e0f2fe; color: #0369a1; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-top: 4px; text-transform: uppercase; }
-    .action-select { width: 110px; height: 32px; padding: 0 4px; font-size: 12px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: 600; cursor: pointer; }
-
-    @media (max-width: 1024px) {
-      .stats-grid { grid-template-columns: repeat(3, 1fr); }
-      .filter-grid { grid-template-columns: 1fr 1fr; }
-    }
+    .action-select { width: 110px; height: 34px; padding: 0 6px; font-size: 12px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: 600; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -122,7 +134,7 @@
       <div class="filter-grid">
         <div class="filter-item">
           <label>SEARCH</label>
-          <input type="text" id="searchInput" placeholder="Booking ID, name, matric, email..." oninput="renderBookings()">
+          <input type="text" id="searchInput" placeholder="Booking ID, name, matric..." oninput="renderBookings()">
         </div>
         <div class="filter-item">
           <label>STATUS</label>
@@ -162,24 +174,32 @@
       </div>
     </div>
 
-    <!-- Bookings Table -->
+    <!-- Bookings View Container -->
     <div class="table-card">
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 16%;">BOOKING</th>
-            <th style="width: 18%;">FACILITY</th>
-            <th style="width: 16%;">DATE / TIME</th>
-            <th style="width: 22%;">BOOKER</th>
-            <th style="width: 16%;">PURPOSE</th>
-            <th style="width: 12%;">STATUS</th>
-            <th style="width: 10%;">ACTIONS</th>
-          </tr>
-        </thead>
-        <tbody id="bookingsTableBody">
-          <tr><td colspan="7" style="text-align:center; padding:30px; color:#64748b;">Loading bookings...</td></tr>
-        </tbody>
-      </table>
+      <!-- Desktop Table View -->
+      <div class="desktop-table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 16%;">BOOKING</th>
+              <th style="width: 18%;">FACILITY</th>
+              <th style="width: 16%;">DATE / TIME</th>
+              <th style="width: 22%;">BOOKER</th>
+              <th style="width: 16%;">PURPOSE</th>
+              <th style="width: 12%;">STATUS</th>
+              <th style="width: 10%;">ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody id="desktopTableBody">
+            <tr><td colspan="7" style="text-align:center; padding:30px; color:#64748b;">Loading bookings...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile Cards View -->
+      <div id="mobileCardsContainer" class="mobile-cards-container">
+        <div style="text-align:center; padding:30px; color:#64748b; font-size:13px;">Loading bookings...</div>
+      </div>
     </div>
   </div>
 
@@ -292,7 +312,8 @@
     }
 
     function renderBookings() {
-      const tbody = document.getElementById("bookingsTableBody");
+      const desktopTbody = document.getElementById("desktopTableBody");
+      const mobileContainer = document.getElementById("mobileCardsContainer");
       const searchQuery = document.getElementById("searchInput").value.toLowerCase().trim();
       const statusVal = document.getElementById("statusFilter").value;
       const facilityVal = document.getElementById("facilityFilter").value;
@@ -335,20 +356,23 @@
         return 0;
       });
 
-      tbody.innerHTML = "";
+      desktopTbody.innerHTML = "";
+      mobileContainer.innerHTML = "";
 
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#64748b;">No matching bookings found.</td></tr>';
+        const emptyMsg = '<div style="text-align:center; padding:30px; color:#64748b; font-size:13px;">No matching bookings found.</div>';
+        desktopTbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:#64748b;">No matching bookings found.</td></tr>`;
+        mobileContainer.innerHTML = emptyMsg;
         return;
       }
 
       filtered.forEach(b => {
-        const tr = document.createElement("tr");
-
         const dateRangeText = formatDateDisplay(b.startDate);
         const timeText = formatTimeDisplay(b.startTime) + " - " + formatTimeDisplay(b.endTime);
         const adminNoteText = b.adminNotes ? `<br><small style="color:#b91c1c;">Admin note: ${b.adminNotes}</small>` : "";
 
+        // 1. Desktop Table Row
+        const tr = document.createElement("tr");
         tr.innerHTML = `
           <td><strong>${b.bookingId}</strong><br><small style="color:#64748b;">${b.organisation || "Individual"}</small></td>
           <td><strong>${b.facility}</strong><br><span class="jkp-tag">${b.jkp || "General"}</span></td>
@@ -366,7 +390,37 @@
             </select>
           </td>
         `;
-        tbody.appendChild(tr);
+        desktopTbody.appendChild(tr);
+
+        // 2. Mobile Card Item
+        const card = document.createElement("div");
+        card.className = "booking-card";
+        card.innerHTML = `
+          <div class="booking-card-header">
+            <div>
+              <strong style="font-size:14px; color:var(--text-main);">${b.bookingId}</strong>
+              <div style="font-size:12px; color:var(--text-muted);">${b.organisation || "Individual"}</div>
+            </div>
+            <span class="badge ${b.status.toLowerCase()}">${b.status}</span>
+          </div>
+          <div class="booking-card-body">
+            <div><strong>Facility:</strong> ${b.facility} <span class="jkp-tag">${b.jkp || "General"}</span></div>
+            <div><strong>Booker:</strong> ${b.bookerName} (${b.matricNumber})</div>
+            <div><strong>Date & Time:</strong> ${dateRangeText} (${timeText})</div>
+            <div><strong>Purpose:</strong> ${b.purpose || "-"}${adminNoteText}</div>
+          </div>
+          <div class="booking-card-footer">
+            <span style="font-size:11px; color:var(--text-muted);">Manage status:</span>
+            <select class="action-select" onchange="updateStatus('${b.bookingId}', this.value)">
+              <option value="" disabled selected>Update</option>
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approve</option>
+              <option value="REJECTED">Reject</option>
+              <option value="CANCELLED">Cancel</option>
+            </select>
+          </div>
+        `;
+        mobileContainer.appendChild(card);
       });
     }
 
