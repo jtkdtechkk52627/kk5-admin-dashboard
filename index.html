@@ -351,7 +351,7 @@
       loginBtn.disabled = true;
       loginBtn.textContent = "Verifying...";
       errorDiv.classList.add("hidden");
-      showLoading("Authenticating admin...");
+      showLoading("Warming up server & loading data...");
 
       try {
         const result = await callApiWithRetry({ action: "adminLogin", username: user, password: pass });
@@ -363,7 +363,6 @@
         document.getElementById("loginView").classList.add("hidden");
         document.getElementById("dashboardView").classList.remove("hidden");
         
-        // Fetch all initial data at once to populate cache
         await fetchAllData();
       } catch (err) {
         errorDiv.textContent = err.message;
@@ -395,7 +394,6 @@
         dataLoaded = true;
         updateLastSyncTimestamp();
 
-        // Render whichever tab is currently active instantly from cache
         if (activeTab === 'bookings') {
           renderBookings();
         } else {
@@ -429,7 +427,7 @@
         facilitiesView.classList.add('hidden');
         btnBookings.style.background = '#0f172a'; btnBookings.style.color = 'white';
         btnFacilities.style.background = '#ffffff'; btnFacilities.style.color = '#0f172a';
-        renderBookings(); // Instant render from cache
+        renderBookings();
       } else {
         statsSection.style.display = 'none';
         filterSection.style.display = 'none';
@@ -437,7 +435,7 @@
         facilitiesView.classList.remove('hidden');
         btnFacilities.style.background = '#0f172a'; btnFacilities.style.color = 'white';
         btnBookings.style.background = '#ffffff'; btnBookings.style.color = '#0f172a';
-        renderFacilities(); // Instant render from cache
+        renderFacilities();
       }
     }
 
@@ -469,7 +467,6 @@
         const isInactive = f.status === "INACTIVE";
         const selectClass = "facility-status-select " + (isInactive ? "status-inactive" : "status-active");
 
-        // 1. Desktop Table Row
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td><strong>${f.name}</strong></td>
@@ -489,7 +486,6 @@
         `;
         tbody.appendChild(tr);
 
-        // 2. Mobile Facility Card Item
         const card = document.createElement("div");
         card.className = "facility-item-card";
         card.innerHTML = `
@@ -556,7 +552,7 @@
         });
         if (!result.success) throw new Error(result.message);
         alert("Facility updated successfully!");
-        await fetchAllData(); // Re-sync cache
+        await fetchAllData();
       } catch (err) {
         alert("Failed to update facility: " + err.message);
       } finally {
@@ -672,7 +668,6 @@
         const timeText = formatTimeDisplay(b.startTime) + " - " + formatTimeDisplay(b.endTime);
         const adminNoteText = b.adminNotes ? `<br><small style="color:#b91c1c;">Admin note: ${b.adminNotes}</small>` : "";
 
-        // 1. Desktop Table Row
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td><strong>${b.bookingId}</strong><br><small style="color:#64748b;">${b.organisation || "Individual"}</small></td>
@@ -693,7 +688,6 @@
         `;
         desktopTbody.appendChild(tr);
 
-        // 2. Mobile Card Item
         const card = document.createElement("div");
         card.className = "booking-card";
         card.innerHTML = `
@@ -754,7 +748,7 @@
         if (!result.success) throw new Error(result.message || "Failed to update status.");
 
         alert("Booking " + bookingId + " updated to " + newStatus);
-        await fetchAllData(); // Re-sync cache
+        await fetchAllData();
       } catch (err) {
         alert("Error updating status: " + err.message);
         renderBookings();
