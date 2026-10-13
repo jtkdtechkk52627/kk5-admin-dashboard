@@ -46,6 +46,9 @@
     .stat-card h3 { margin: 0 0 4px; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
     .stat-card .number { font-size: 22px; font-weight: 800; color: #0f172a; }
 
+    /* Tabs Bar */
+    .tabs-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+
     /* Filter Toolbar Container */
     .filter-card { background: white; border-radius: 12px; padding: 14px; margin-bottom: 16px; border: 1px solid #e2e8f0; }
     .filter-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
@@ -112,16 +115,22 @@
     <div class="hero-banner">
       <div>
         <h1>KK5 Admin Dashboard</h1>
-        <p>Manage facility booking requests.</p>
+        <p>Manage facility booking requests & facility statuses.</p>
       </div>
       <div style="display:flex; gap:10px;">
-        <button type="button" class="btn-refresh" onclick="loadDashboardData()">🔄 Refresh</button>
+        <button type="button" class="btn-refresh" onclick="refreshCurrentTab()">🔄 Refresh</button>
         <button type="button" class="btn-refresh" style="background:#ef4444; color:white;" onclick="logoutAdmin()">Sign Out</button>
       </div>
     </div>
 
+    <!-- Navigation Tabs -->
+    <div class="tabs-bar">
+      <button type="button" id="tabBookingsBtn" class="btn-refresh" style="background:#0f172a; color:white;" onclick="switchTab('bookings')">📦 Manage Bookings</button>
+      <button type="button" id="tabFacilitiesBtn" class="btn-refresh" onclick="switchTab('facilities')">🏢 Manage Facilities</button>
+    </div>
+
     <!-- Stat Summary Cards -->
-    <div class="stats-grid">
+    <div id="statsSection" class="stats-grid">
       <div class="stat-card"><h3>TOTAL</h3><div id="statTotal" class="number">0</div></div>
       <div class="stat-card"><h3>PENDING</h3><div id="statPending" class="number">0</div></div>
       <div class="stat-card"><h3>APPROVED</h3><div id="statApproved" class="number">0</div></div>
@@ -130,7 +139,7 @@
     </div>
 
     <!-- Filter & Search Toolbar -->
-    <div class="filter-card">
+    <div id="filterSection" class="filter-card">
       <div class="filter-grid">
         <div class="filter-item">
           <label>SEARCH</label>
@@ -174,8 +183,8 @@
       </div>
     </div>
 
-    <!-- Bookings View Container -->
-    <div class="table-card">
+    <!-- BOOKINGS VIEW CONTAINER -->
+    <div id="bookingsViewContainer" class="table-card">
       <!-- Desktop Table View -->
       <div class="desktop-table-wrapper">
         <table>
@@ -201,6 +210,28 @@
         <div style="text-align:center; padding:30px; color:#64748b; font-size:13px;">Loading bookings...</div>
       </div>
     </div>
+
+    <!-- FACILITIES MANAGEMENT VIEW -->
+    <div id="facilitiesManagementView" class="table-card hidden">
+      <h3 style="margin-top:0; font-size:16px; color:#0f172a;">Facility Availability & Closure Notices</h3>
+      <p style="font-size:13px; color:#64748b; margin-bottom:16px;">Toggle facilities active/inactive and provide reasons for maintenance or closures.</p>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 25%;">FACILITY NAME</th>
+              <th style="width: 15%;">JKP IN CHARGE</th>
+              <th style="width: 20%;">STATUS</th>
+              <th style="width: 30%;">CLOSURE REASON / NOTICE</th>
+              <th style="width: 10%;">ACTION</th>
+            </tr>
+          </thead>
+          <tbody id="facilitiesTableBody">
+            <tr><td colspan="5" style="text-align:center; padding:30px; color:#64748b;">Loading facilities...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -208,6 +239,7 @@
 
     let currentAdmin = { username: "", password: "" };
     let cachedBookings = [];
+    let activeTab = "bookings";
 
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -244,6 +276,42 @@
       }
     });
 
+    function switchTab(tabName) {
+      activeTab = tabName;
+      const bookingsView = document.getElementById("bookingsViewContainer");
+      const facilitiesView = document.getElementById("facilitiesManagementView");
+      const statsSection = document.getElementById("statsSection");
+      const filterSection = document.getElementById("filterSection");
+      const btnBookings = document.getElementById("tabBookingsBtn");
+      const btnFacilities = document.getElementById("tabFacilitiesBtn");
+
+      if (tabName === 'bookings') {
+        statsSection.style.display = 'grid';
+        filterSection.style.display = 'block';
+        bookingsView.classList.remove('hidden');
+        facilitiesView.classList.add('hidden');
+        btnBookings.style.background = '#0f172a'; btnBookings.style.color = 'white';
+        btnFacilities.style.background = '#ffffff'; btnFacilities.style.color = '#0f172a';
+        renderBookings();
+      } else {
+        statsSection.style.display = 'none';
+        filterSection.style.display = 'none';
+        bookingsView.classList.add('hidden');
+        facilitiesView.classList.remove('hidden');
+        btnFacilities.style.background = '#0f172a'; btnFacilities.style.color = 'white';
+        btnBookings.style.background = '#ffffff'; btnBookings.style.color = '#0f172a';
+        loadAdminFacilities();
+      }
+    }
+
+    function refreshCurrentTab() {
+      if (activeTab === 'bookings') {
+        loadDashboardData();
+      } else {
+        loadAdminFacilities();
+      }
+    }
+
     async function loadDashboardData() {
       try {
         const response = await fetch(APPS_SCRIPT_URL, {
@@ -260,6 +328,71 @@
         renderBookings();
       } catch (err) {
         alert("Error loading dashboard: " + err.message);
+      }
+    }
+
+    async function loadAdminFacilities() {
+      const tbody = document.getElementById("facilitiesTableBody");
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#64748b;">Loading facilities...</td></tr>';
+      
+      try {
+        const response = await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "getAdminFacilities", username: currentAdmin.username, password: currentAdmin.password })
+        });
+        const result = await response.json();
+        if (!result.success) throw new Error(result.message);
+
+        tbody.innerHTML = "";
+        result.data.forEach(f => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><strong>${f.name}</strong></td>
+            <td><span class="jkp-tag">${f.jkp || "General"}</span></td>
+            <td>
+              <select id="status_${f.rowNumber}" class="action-select" style="width:100%;">
+                <option value="ACTIVE" ${f.status === "ACTIVE" ? "selected" : ""}>ACTIVE</option>
+                <option value="INACTIVE" ${f.status === "INACTIVE" ? "selected" : ""}>INACTIVE</option>
+              </select>
+            </td>
+            <td>
+              <input type="text" id="notice_${f.rowNumber}" value="${f.notice || ""}" placeholder="e.g. Under maintenance" style="height:34px; font-size:12px;">
+            </td>
+            <td>
+              <button type="button" class="btn-refresh" style="background:#0f172a; color:white; padding:6px 12px; font-size:12px;" onclick="saveFacility(${f.rowNumber})">Save</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Error loading facilities: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function saveFacility(rowNumber) {
+      const status = document.getElementById(`status_${rowNumber}`).value;
+      const notice = document.getElementById(`notice_${rowNumber}`).value.trim();
+
+      try {
+        const response = await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "updateFacility",
+            username: currentAdmin.username,
+            password: currentAdmin.password,
+            rowNumber: rowNumber,
+            status: status,
+            notice: notice
+          })
+        });
+        const result = await response.json();
+        if (!result.success) throw new Error(result.message);
+        alert("Facility updated successfully!");
+        loadAdminFacilities();
+      } catch (err) {
+        alert("Failed to update facility: " + err.message);
       }
     }
 
