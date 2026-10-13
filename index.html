@@ -67,11 +67,11 @@
     td { padding: 14px 10px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: top; word-break: break-word; }
     tr:hover td { background: #f8fafc; }
 
-    /* Mobile Cards View */
+    /* Mobile Cards View (Bookings & Facilities) */
     .mobile-cards-container { display: flex; flex-direction: column; gap: 12px; }
     @media (min-width: 900px) { .mobile-cards-container { display: none; } }
-    .booking-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
-    .booking-card-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+    .booking-card, .facility-item-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+    .booking-card-header, .facility-card-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
     .booking-card-body { font-size: 13px; color: var(--text-muted); display: grid; gap: 4px; }
     .booking-card-body strong { color: var(--text-main); }
     .booking-card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 8px; margin-top: 4px; }
@@ -89,9 +89,9 @@
     /* Colored Facility Status Dropdowns */
     .facility-status-select {
       width: 100%;
-      height: 34px;
-      padding: 0 6px;
-      font-size: 12px;
+      height: 38px;
+      padding: 0 8px;
+      font-size: 13px;
       border-radius: 6px;
       font-weight: 700;
       cursor: pointer;
@@ -237,7 +237,9 @@
     <div id="facilitiesManagementView" class="table-card hidden">
       <h3 style="margin-top:0; font-size:16px; color:#0f172a;">Facility Availability & Closure Notices</h3>
       <p style="font-size:13px; color:#64748b; margin-bottom:16px;">Toggle facilities active/inactive and provide reasons for maintenance or closures.</p>
-      <div style="overflow-x:auto;">
+      
+      <!-- Desktop Facilities Table -->
+      <div class="desktop-table-wrapper">
         <table>
           <thead>
             <tr>
@@ -252,6 +254,11 @@
             <tr><td colspan="5" style="text-align:center; padding:30px; color:#64748b;">Loading facilities...</td></tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Mobile Facilities Cards View -->
+      <div id="mobileFacilitiesContainer" class="mobile-cards-container">
+        <div style="text-align:center; padding:30px; color:#64748b; font-size:13px;">Loading facilities...</div>
       </div>
     </div>
   </div>
@@ -355,7 +362,10 @@
 
     async function loadAdminFacilities() {
       const tbody = document.getElementById("facilitiesTableBody");
+      const mobileContainer = document.getElementById("mobileFacilitiesContainer");
+
       tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#64748b;">Loading facilities...</td></tr>';
+      mobileContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#64748b; font-size:13px;">Loading facilities...</div>';
       
       try {
         const response = await fetch(APPS_SCRIPT_URL, {
@@ -367,10 +377,13 @@
         if (!result.success) throw new Error(result.message);
 
         tbody.innerHTML = "";
+        mobileContainer.innerHTML = "";
+
         result.data.forEach(f => {
           const isInactive = f.status === "INACTIVE";
           const selectClass = "facility-status-select " + (isInactive ? "status-inactive" : "status-active");
 
+          // 1. Desktop Table Row
           const tr = document.createElement("tr");
           tr.innerHTML = `
             <td><strong>${f.name}</strong></td>
@@ -389,23 +402,67 @@
             </td>
           `;
           tbody.appendChild(tr);
+
+          // 2. Mobile Facility Card Item
+          const card = document.createElement("div");
+          card.className = "facility-item-card";
+          card.innerHTML = `
+            <div class="facility-card-header">
+              <div>
+                <strong style="font-size:15px; color:var(--text-main);">${f.name}</strong>
+                <div><span class="jkp-tag">${f.jkp || "General"}</span></div>
+              </div>
+            </div>
+            <div style="display:grid; gap:8px;">
+              <div>
+                <label>Status</label>
+                <select id="mob_status_${f.rowNumber}" class="${selectClass}" onchange="updateSelectColor(this); syncFacilityStatus(${f.rowNumber}, this.value);">
+                  <option value="ACTIVE" ${f.status === "ACTIVE" ? "selected" : ""}>ACTIVE</option>
+                  <option value="INACTIVE" ${f.status === "INACTIVE" ? "selected" : ""}>INACTIVE</option>
+                </select>
+              </div>
+              <div>
+                <label>Closure Reason / Notice</label>
+                <input type="text" id="mob_notice_${f.rowNumber}" value="${f.notice || ""}" placeholder="e.g. Under maintenance" style="height:38px; font-size:13px;" oninput="syncFacilityNotice(${f.rowNumber}, this.value)">
+              </div>
+            </div>
+            <div style="border-top:1px solid #f1f5f9; padding-top:8px; margin-top:2px;">
+              <button type="button" class="btn-refresh" style="background:#0f172a; color:white; width:100%; padding:10px; font-size:13px;" onclick="saveFacility(${f.rowNumber})">Save Changes</button>
+            </div>
+          `;
+          mobileContainer.appendChild(card);
         });
       } catch (err) {
         tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Error loading facilities: ${err.message}</td></tr>`;
+        mobileContainer.innerHTML = `<div style="text-align:center; color:red; padding:20px;">Error loading facilities: ${err.message}</div>`;
       }
     }
 
     function updateSelectColor(selectElement) {
       if (selectElement.value === "ACTIVE") {
-        selectElement.className = "facility-status-select status-active";
+        selectElement.className = selectElement.className.replace("status-inactive", "status-active") + (selectElement.className.includes("status-active") ? "" : " status-active");
       } else {
-        selectElement.className = "facility-status-select status-inactive";
+        selectElement.className = selectElement.className.replace("status-active", "status-inactive") + (selectElement.className.includes("status-inactive") ? "" : " status-inactive");
       }
     }
 
+    // Keep mobile and desktop inputs in sync seamlessly
+    function syncFacilityStatus(rowNumber, val) {
+      const desktopSel = document.getElementById(`status_${rowNumber}`);
+      if (desktopSel) { desktopSel.value = val; updateSelectColor(desktopSel); }
+    }
+    function syncFacilityNotice(rowNumber, val) {
+      const desktopInp = document.getElementById(`notice_${rowNumber}`);
+      if (desktopInp) { desktopInp.value = val; }
+    }
+
     async function saveFacility(rowNumber) {
-      const status = document.getElementById(`status_${rowNumber}`).value;
-      const notice = document.getElementById(`notice_${rowNumber}`).value.trim();
+      // Grab whichever input/select is currently visible/active
+      const statusEl = document.getElementById(`status_${rowNumber}`) || document.getElementById(`mob_status_${rowNumber}`);
+      const noticeEl = document.getElementById(`notice_${rowNumber}`) || document.getElementById(`mob_notice_${rowNumber}`);
+
+      const status = statusEl ? statusEl.value : "ACTIVE";
+      const notice = noticeEl ? noticeEl.value.trim() : "";
 
       try {
         const response = await fetch(APPS_SCRIPT_URL, {
