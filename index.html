@@ -25,8 +25,10 @@
     .login-box p { color: #64748b; font-size: 13px; margin-bottom: 20px; }
     .form-group { margin-bottom: 16px; }
     label { display: block; font-weight: 700; font-size: 11px; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
-    input, select { width: 100%; height: 42px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; background: #fff; }
-    input:focus, select:focus { border-color: #0f172a; }
+    input, select, textarea { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; background: #fff; }
+    input, select { height: 42px; }
+    textarea { resize: vertical; min-height: 80px; }
+    input:focus, select:focus, textarea:focus { border-color: #0f172a; }
     .btn-login { width: 100%; height: 42px; background: #0f172a; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
     .error-msg { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 10px; border-radius: 8px; font-size: 13px; margin-top: 12px; text-align: center; }
     .hidden { display: none !important; }
@@ -61,7 +63,7 @@
     .stat-card .number { font-size: 22px; font-weight: 800; color: #0f172a; }
 
     /* Tabs Bar */
-    .tabs-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+    .tabs-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
 
     /* Filter Toolbar Container */
     .filter-card { background: white; border-radius: 12px; padding: 14px; margin-bottom: 16px; border: 1px solid #e2e8f0; }
@@ -81,7 +83,7 @@
     td { padding: 14px 10px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: top; word-break: break-word; }
     tr:hover td { background: #f8fafc; }
 
-    /* Mobile Cards View (Bookings & Facilities) */
+    /* Mobile Cards View */
     .mobile-cards-container { display: flex; flex-direction: column; gap: 12px; }
     @media (min-width: 900px) { .mobile-cards-container { display: none; } }
     .booking-card, .facility-item-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
@@ -111,16 +113,8 @@
       cursor: pointer;
       border: 1px solid #cbd5e1;
     }
-    .facility-status-select.status-active {
-      background: #d4edda;
-      color: #155724;
-      border-color: #c3e6cb;
-    }
-    .facility-status-select.status-inactive {
-      background: #f8d7da;
-      color: #721c24;
-      border-color: #f5c6cb;
-    }
+    .facility-status-select.status-active { background: #d4edda; color: #155724; border-color: #c3e6cb; }
+    .facility-status-select.status-inactive { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
   </style>
 </head>
 <body>
@@ -160,7 +154,8 @@
         <p>Manage facility booking requests & facility statuses.</p>
         <div id="lastSyncNotice" style="font-size: 12px; color: #38bdf8; margin-top: 6px;">Last synced: Never</div>
       </div>
-      <div style="display:flex; gap:10px; align-items:center;">
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <button type="button" id="maintenanceToggleBtn" class="btn-refresh" style="background:#22c55e; color:white;" onclick="toggleMaintenanceMode()">🟢 Maintenance: OFF</button>
         <button type="button" class="btn-refresh" onclick="refreshAllData()">🔄 Refresh Data</button>
         <button type="button" class="btn-refresh" style="background:#ef4444; color:white;" onclick="logoutAdmin()">Sign Out</button>
       </div>
@@ -170,6 +165,8 @@
     <div class="tabs-bar">
       <button type="button" id="tabBookingsBtn" class="btn-refresh" style="background:#0f172a; color:white;" onclick="switchTab('bookings')">📅 Manage Bookings</button>
       <button type="button" id="tabFacilitiesBtn" class="btn-refresh" onclick="switchTab('facilities')">🏢 Manage Facilities</button>
+      <button type="button" id="tabBackdoorBtn" class="btn-refresh" onclick="switchTab('backdoor')">⚡ Admin Backdoor Booking</button>
+      <button type="button" id="tabReportBtn" class="btn-refresh" onclick="switchTab('report')">📊 Daily Report Export</button>
     </div>
 
     <!-- Stat Summary Cards -->
@@ -228,7 +225,6 @@
 
     <!-- BOOKINGS VIEW CONTAINER -->
     <div id="bookingsViewContainer" class="table-card">
-      <!-- Desktop Table View -->
       <div class="desktop-table-wrapper">
         <table>
           <thead>
@@ -247,8 +243,6 @@
           </tbody>
         </table>
       </div>
-
-      <!-- Mobile Cards View -->
       <div id="mobileCardsContainer" class="mobile-cards-container">
         <div style="text-align:center; padding:30px; color:#64748b; font-size:13px;">Loading bookings...</div>
       </div>
@@ -273,7 +267,6 @@
         </div>
       </div>
       
-      <!-- Desktop Facilities Table -->
       <div class="desktop-table-wrapper">
         <table>
           <thead>
@@ -290,10 +283,82 @@
           </tbody>
         </table>
       </div>
-
-      <!-- Mobile Facilities Cards View -->
       <div id="mobileFacilitiesContainer" class="mobile-cards-container">
         <div style="text-align:center; padding:30px; color:#64748b; font-size:13px;">Loading facilities...</div>
+      </div>
+    </div>
+
+    <!-- ADMIN BACKDOOR BOOKING VIEW -->
+    <div id="backdoorBookingView" class="table-card hidden" style="max-width: 800px; margin: 0 auto;">
+      <h3 style="margin:0 0 6px; font-size:18px; color:#0f172a;">⚡ Admin Backdoor Booking</h3>
+      <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Book on behalf of students/organisations. Bypasses 1-day advance restrictions and automatically sets status to <strong>APPROVED</strong> with instant calendar syncing.</p>
+      
+      <form id="backdoorForm" style="display:grid; gap:16px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="bdFacility">Facility</label>
+          <select id="bdFacility" required><option value="">Select facility...</option></select>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="bdDate">Date</label>
+            <input type="date" id="bdDate" required>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="bdStartTime">Start Time</label>
+            <input type="time" id="bdStartTime" required>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="bdEndTime">End Time</label>
+            <input type="time" id="bdEndTime" required>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group" style="margin-bottom:0;"><label for="bdName">Booker Name</label><input type="text" id="bdName" required placeholder="Full Name"></div>
+          <div class="form-group" style="margin-bottom:0;"><label for="bdMatric">Matric Number</label><input type="text" id="bdMatric" required placeholder="e.g. 24001958"></div>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group" style="margin-bottom:0;"><label for="bdEmail">Email</label><input type="email" id="bdEmail" required placeholder="user@siswa.um.edu.my"></div>
+          <div class="form-group" style="margin-bottom:0;"><label for="bdPhone">Phone Number</label><input type="tel" id="bdPhone" required placeholder="0104563287"></div>
+        </div>
+        <div class="form-group" style="margin-bottom:0;"><label for="bdOrg">Organisation / Bureau</label><input type="text" id="bdOrg" required placeholder="e.g. JTK"></div>
+        <div class="form-group" style="margin-bottom:0;"><label for="bdPurpose">Purpose / Usage</label><textarea id="bdPurpose" required placeholder="Purpose of booking..."></textarea></div>
+
+        <button type="submit" class="btn-refresh" style="background:#0f172a; color:white; width:100%; height:46px; font-size:15px; margin-top:10px;">Submit Approved Booking (Backdoor)</button>
+      </form>
+    </div>
+
+    <!-- DAILY REPORT EXPORT VIEW -->
+    <div id="dailyReportView" class="table-card hidden">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <h3 style="margin:0 0 4px; font-size:18px; color:#0f172a;">📊 Daily Booking Report</h3>
+          <p style="font-size:13px; color:#64748b; margin:0;">View all approved facility bookings scheduled for a specific date.</p>
+        </div>
+        <div style="display:flex; gap:10px; align-items:flex-end;">
+          <div>
+            <label for="reportDateInput" style="margin-bottom:2px;">Select Date</label>
+            <input type="date" id="reportDateInput" style="height:38px;">
+          </div>
+          <button type="button" class="btn-refresh" style="background:#0f172a; color:white; height:38px; padding:0 16px;" onclick="fetchDailyReport()">Generate Report</button>
+        </div>
+      </div>
+
+      <div class="desktop-table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 15%;">BOOKING ID</th>
+              <th style="width: 20%;">FACILITY</th>
+              <th style="width: 15%;">TIME SLOT</th>
+              <th style="width: 20%;">BOOKER</th>
+              <th style="width: 15%;">ORGANISATION</th>
+              <th style="width: 15%;">PURPOSE</th>
+            </tr>
+          </thead>
+          <tbody id="reportTableBody">
+            <tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">Select a date and click Generate Report.</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -306,6 +371,7 @@
     let cachedFacilities = [];
     let activeTab = "bookings";
     let dataLoaded = false;
+    let currentMaintenanceState = false;
 
     function showLoading(text = "Processing request...") {
       document.getElementById("loadingText").textContent = text;
@@ -363,6 +429,7 @@
         document.getElementById("loginView").classList.add("hidden");
         document.getElementById("dashboardView").classList.remove("hidden");
         
+        await checkMaintenanceStatus();
         await fetchAllData();
       } catch (err) {
         errorDiv.textContent = err.message;
@@ -373,6 +440,56 @@
         loginBtn.textContent = "Sign In";
       }
     });
+
+    async function checkMaintenanceStatus() {
+      try {
+        const result = await callApiWithRetry({ action: "getMaintenanceStatus", username: currentAdmin.username, password: currentAdmin.password });
+        if (result.success) {
+          currentMaintenanceState = result.maintenanceMode;
+          updateMaintenanceButtonUI();
+        }
+      } catch (err) {}
+    }
+
+    function updateMaintenanceButtonUI() {
+      const btn = document.getElementById("maintenanceToggleBtn");
+      if (!btn) return;
+      if (currentMaintenanceState) {
+        btn.style.background = "#ef4444";
+        btn.style.color = "white";
+        btn.textContent = "🔴 Maintenance: ON";
+      } else {
+        btn.style.background = "#22c55e";
+        btn.style.color = "white";
+        btn.textContent = "🟢 Maintenance: OFF";
+      }
+    }
+
+    async function toggleMaintenanceMode() {
+      const newState = !currentMaintenanceState;
+      const noticePrompt = newState ? (prompt("Enter maintenance notice message for users:", "The booking system is currently under maintenance.") || "System under maintenance.") : "";
+
+      showLoading(newState ? "Enabling maintenance mode..." : "Disabling maintenance mode...");
+      try {
+        const result = await callApiWithRetry({
+          action: "setMaintenanceMode",
+          username: currentAdmin.username,
+          password: currentAdmin.password,
+          maintenanceMode: newState,
+          maintenanceNotice: noticePrompt
+        });
+
+        if (!result.success) throw new Error(result.message);
+
+        currentMaintenanceState = newState;
+        updateMaintenanceButtonUI();
+        alert(newState ? "Maintenance mode enabled successfully." : "Maintenance mode disabled.");
+      } catch (err) {
+        alert("Failed to update maintenance mode: " + err.message);
+      } finally {
+        hideLoading();
+      }
+    }
 
     async function fetchAllData() {
       showLoading("Syncing dashboard data...");
@@ -390,15 +507,13 @@
         populateFilterDropdowns();
 
         cachedFacilities = facRes.data || [];
+        populateBackdoorFacilityDropdown();
 
         dataLoaded = true;
         updateLastSyncTimestamp();
 
-        if (activeTab === 'bookings') {
-          renderBookings();
-        } else {
-          renderFacilities();
-        }
+        if (activeTab === 'bookings') renderBookings();
+        else if (activeTab === 'facilities') renderFacilities();
       } catch (err) {
         alert("Error syncing data: " + err.message);
       } finally {
@@ -407,6 +522,7 @@
     }
 
     async function refreshAllData() {
+      await checkMaintenanceStatus();
       await fetchAllData();
       alert("Data refreshed successfully!");
     }
@@ -415,27 +531,138 @@
       activeTab = tabName;
       const bookingsView = document.getElementById("bookingsViewContainer");
       const facilitiesView = document.getElementById("facilitiesManagementView");
+      const backdoorView = document.getElementById("backdoorBookingView");
+      const reportView = document.getElementById("dailyReportView");
+      
       const statsSection = document.getElementById("statsSection");
       const filterSection = document.getElementById("filterSection");
+      
       const btnBookings = document.getElementById("tabBookingsBtn");
       const btnFacilities = document.getElementById("tabFacilitiesBtn");
+      const btnBackdoor = document.getElementById("tabBackdoorBtn");
+      const btnReport = document.getElementById("tabReportBtn");
+
+      [bookingsView, facilitiesView, backdoorView, reportView].forEach(v => v.classList.add("hidden"));
+      [btnBookings, btnFacilities, btnBackdoor, btnReport].forEach(b => { b.style.background = "#ffffff"; b.style.color = "#0f172a"; });
 
       if (tabName === 'bookings') {
         statsSection.style.display = 'grid';
         filterSection.style.display = 'block';
         bookingsView.classList.remove('hidden');
-        facilitiesView.classList.add('hidden');
         btnBookings.style.background = '#0f172a'; btnBookings.style.color = 'white';
-        btnFacilities.style.background = '#ffffff'; btnFacilities.style.color = '#0f172a';
         renderBookings();
-      } else {
+      } else if (tabName === 'facilities') {
         statsSection.style.display = 'none';
         filterSection.style.display = 'none';
-        bookingsView.classList.add('hidden');
         facilitiesView.classList.remove('hidden');
         btnFacilities.style.background = '#0f172a'; btnFacilities.style.color = 'white';
-        btnBookings.style.background = '#ffffff'; btnBookings.style.color = '#0f172a';
         renderFacilities();
+      } else if (tabName === 'backdoor') {
+        statsSection.style.display = 'none';
+        filterSection.style.display = 'none';
+        backdoorView.classList.remove('hidden');
+        btnBackdoor.style.background = '#0f172a'; btnBackdoor.style.color = 'white';
+      } else if (tabName === 'report') {
+        statsSection.style.display = 'none';
+        filterSection.style.display = 'none';
+        reportView.classList.remove('hidden');
+        btnReport.style.background = '#0f172a'; btnReport.style.color = 'white';
+      }
+    }
+
+    function populateBackdoorFacilityDropdown() {
+      const select = document.getElementById("bdFacility");
+      select.innerHTML = '<option value="">Select facility...</option>';
+      cachedFacilities.forEach(f => {
+        if (f.status === "ACTIVE") {
+          select.innerHTML += `<option value="${f.name}">${f.name}</option>`;
+        }
+      });
+    }
+
+    document.getElementById("backdoorForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const facility = document.getElementById("bdFacility").value;
+      const date = document.getElementById("bdDate").value;
+      const startTime = document.getElementById("bdStartTime").value;
+      const endTime = document.getElementById("bdEndTime").value;
+
+      if (!facility || !date || !startTime || !endTime) {
+        alert("Please fill in all required slot and facility details.");
+        return;
+      }
+
+      const payload = {
+        action: "adminBookForSomeone",
+        username: currentAdmin.username,
+        password: currentAdmin.password,
+        facility: facility,
+        dateSlots: [{ date: date, startTime: startTime, endTime: endTime }],
+        bookerName: document.getElementById("bdName").value.trim(),
+        matricNumber: document.getElementById("bdMatric").value.trim(),
+        email: document.getElementById("bdEmail").value.trim().toLowerCase(),
+        phone: document.getElementById("bdPhone").value.trim(),
+        organisation: document.getElementById("bdOrg").value.trim(),
+        purpose: document.getElementById("bdPurpose").value.trim()
+      };
+
+      showLoading("Submitting admin backdoor booking...");
+      try {
+        const result = await callApiWithRetry(payload);
+        if (!result.success) throw new Error(result.message);
+        alert("Backdoor booking successful! Booking ID: " + result.bookingId + " (Status: APPROVED)");
+        document.getElementById("backdoorForm").reset();
+        await fetchAllData();
+        switchTab("bookings");
+      } catch (err) {
+        alert("Failed to submit backdoor booking: " + err.message);
+      } finally {
+        hideLoading();
+      }
+    });
+
+    async function fetchDailyReport() {
+      const dateVal = document.getElementById("reportDateInput").value;
+      if (!dateVal) {
+        alert("Please select a date for the report.");
+        return;
+      }
+
+      showLoading("Generating daily report...");
+      try {
+        const result = await callApiWithRetry({
+          action: "getDailyReportData",
+          username: currentAdmin.username,
+          password: currentAdmin.password,
+          date: dateVal
+        });
+
+        if (!result.success) throw new Error(result.message);
+        const rows = result.data || [];
+        const tbody = document.getElementById("reportTableBody");
+        tbody.innerHTML = "";
+
+        if (rows.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">No approved bookings found for ${dateVal}.</td></tr>`;
+          return;
+        }
+
+        rows.forEach(r => {
+          tbody.innerHTML += `
+            <tr>
+              <td><strong>${r.bookingId}</strong></td>
+              <td>${r.facility}</td>
+              <td><span style="color:#2563eb; font-weight:600;">${r.start} - ${r.end}</span></td>
+              <td><strong>${r.bookerName}</strong><br><small style="color:#64748b;">${r.matricNumber}</small></td>
+              <td>${r.organisation || "N/A"}</td>
+              <td>${r.purpose || "-"}</td>
+            </tr>
+          `;
+        });
+      } catch (err) {
+        alert("Failed to generate report: " + err.message);
+      } finally {
+        hideLoading();
       }
     }
 
@@ -664,7 +891,6 @@
       }
 
       filtered.forEach(b => {
-        // FIXED: Loop through each exact slot in rows instead of showing a collapsed summary
         const slotsHtml = (b.rows || []).map(r => 
           `<div style="margin-bottom: 4px;">📅 ${formatDateDisplay(r.date)}<br><small style="color:#2563eb; font-weight:600;">${formatTimeDisplay(r.start)} - ${formatTimeDisplay(r.end)}</small></div>`
         ).join('');
@@ -765,6 +991,7 @@
       cachedBookings = [];
       cachedFacilities = [];
       dataLoaded = false;
+      currentMaintenanceState = false;
       document.getElementById("dashboardView").classList.add("hidden");
       document.getElementById("loginView").classList.remove("hidden");
       document.getElementById("username").value = "";
