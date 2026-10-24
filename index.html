@@ -289,27 +289,36 @@
     <!-- ADMIN BACKDOOR BOOKING VIEW -->
     <div id="backdoorBookingView" class="table-card hidden" style="max-width: 800px; margin: 0 auto;">
       <h3 style="margin:0 0 6px; font-size:18px; color:#0f172a;">⚡ Admin Backdoor Booking</h3>
-      <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Book on behalf of students/organisations. Bypasses 1-day advance restrictions, allows booking inactive facilities, and automatically sets status to <strong>APPROVED</strong> with instant calendar syncing.</p>
+      <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Book on behalf of students/organisations. Bypasses 1-day advance restrictions, allows multi-day date ranges, and sets status to <strong>APPROVED</strong> with instant calendar syncing.</p>
       
       <form id="backdoorForm" style="display:grid; gap:16px;">
         <div class="form-group" style="margin-bottom:0;">
           <label for="bdFacility">Facility</label>
           <select id="bdFacility" required><option value="">Select facility...</option></select>
         </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
           <div class="form-group" style="margin-bottom:0;">
-            <label for="bdDate">Date</label>
-            <input type="date" id="bdDate" required>
+            <label for="bdStartDate">Start Date</label>
+            <input type="date" id="bdStartDate" required>
           </div>
           <div class="form-group" style="margin-bottom:0;">
-            <label for="bdStartTime">Start Time</label>
+            <label for="bdEndDate">End Date</label>
+            <input type="date" id="bdEndDate" required>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="bdStartTime">Daily Start Time</label>
             <input type="time" id="bdStartTime" required>
           </div>
           <div class="form-group" style="margin-bottom:0;">
-            <label for="bdEndTime">End Time</label>
+            <label for="bdEndTime">Daily End Time</label>
             <input type="time" id="bdEndTime" required>
           </div>
         </div>
+
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
           <div class="form-group" style="margin-bottom:0;"><label for="bdName">Booker Name</label><input type="text" id="bdName" required placeholder="Full Name"></div>
           <div class="form-group" style="margin-bottom:0;"><label for="bdMatric">Matric Number</label><input type="text" id="bdMatric" required placeholder="e.g. 24001958"></div>
@@ -330,9 +339,15 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
         <div>
           <h3 style="margin:0 0 4px; font-size:18px; color:#0f172a;">📊 Daily Booking Report</h3>
-          <p style="font-size:13px; color:#64748b; margin:0;">View all approved facility bookings sorted by facility and time.</p>
+          <p style="font-size:13px; color:#64748b; margin:0;">View all approved facility bookings sorted by facility and start time.</p>
         </div>
-        <div style="display:flex; gap:10px; align-items:flex-end;">
+        <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+          <div>
+            <label for="reportFacilityFilter" style="margin-bottom:2px;">Facility Filter</label>
+            <select id="reportFacilityFilter" style="height:38px; font-size:13px;" onchange="renderReportTable()">
+              <option value="ALL">All Facilities</option>
+            </select>
+          </div>
           <div>
             <label for="reportDateInput" style="margin-bottom:2px;">Select Date</label>
             <input type="date" id="reportDateInput" style="height:38px;">
@@ -367,6 +382,7 @@
     let currentAdmin = { username: "", password: "" };
     let cachedBookings = [];
     let cachedFacilities = [];
+    let cachedReportRows = [];
     let activeTab = "bookings";
     let dataLoaded = false;
     let currentMaintenanceState = false;
@@ -506,6 +522,7 @@
 
         cachedFacilities = facRes.data || [];
         populateBackdoorFacilityDropdown();
+        populateReportFacilityDropdown();
 
         dataLoaded = true;
         updateLastSyncTimestamp();
@@ -571,23 +588,55 @@
     function populateBackdoorFacilityDropdown() {
       const select = document.getElementById("bdFacility");
       select.innerHTML = '<option value="">Select facility...</option>';
-      // Admin backdoor allows booking even if inactive
       cachedFacilities.forEach(f => {
         const inactiveLabel = f.status !== "ACTIVE" ? " (Inactive)" : "";
         select.innerHTML += `<option value="${f.name}">${f.name}${inactiveLabel}</option>`;
       });
     }
 
+    function populateReportFacilityDropdown() {
+      const select = document.getElementById("reportFacilityFilter");
+      select.innerHTML = '<option value="ALL">All Facilities</option>';
+      cachedFacilities.forEach(f => {
+        select.innerHTML += `<option value="${f.name}">${f.name}</option>`;
+      });
+    }
+
+    // Support Multi-Day Date Ranges in Admin Backdoor
     document.getElementById("backdoorForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const facility = document.getElementById("bdFacility").value;
-      const date = document.getElementById("bdDate").value;
+      const startDateStr = document.getElementById("bdStartDate").value;
+      const endDateStr = document.getElementById("bdEndDate").value;
       const startTime = document.getElementById("bdStartTime").value;
       const endTime = document.getElementById("bdEndTime").value;
 
-      if (!facility || !date || !startTime || !endTime) {
+      if (!facility || !startDateStr || !endDateStr || !startTime || !endTime) {
         alert("Please fill in all required slot and facility details.");
         return;
+      }
+
+      const startD = new Date(startDateStr);
+      const endD = new Date(endDateStr);
+
+      if (endD < startD) {
+        alert("End date cannot be earlier than start date.");
+        return;
+      }
+
+      const dateSlots = [];
+      let currentD = new Date(startD);
+      while (currentD <= endD) {
+        const yyyy = currentD.getFullYear();
+        const mm = String(currentD.getMonth() + 1).padStart(2, '0');
+        const dd = String(currentD.getDate()).padStart(2, '0');
+        dateSlots.push({ date: `${yyyy}-${mm}-${dd}`, startTime: startTime, endTime: endTime });
+        currentD.setDate(currentD.getDate() + 1);
+      }
+
+      let phoneVal = document.getElementById("bdPhone").value.trim();
+      if (phoneVal && !phoneVal.startsWith("0") && !phoneVal.startsWith("+")) {
+        phoneVal = "0" + phoneVal;
       }
 
       const payload = {
@@ -595,16 +644,16 @@
         username: currentAdmin.username,
         password: currentAdmin.password,
         facility: facility,
-        dateSlots: [{ date: date, startTime: startTime, endTime: endTime }],
+        dateSlots: dateSlots,
         bookerName: document.getElementById("bdName").value.trim(),
         matricNumber: document.getElementById("bdMatric").value.trim(),
         email: document.getElementById("bdEmail").value.trim().toLowerCase(),
-        phone: document.getElementById("bdPhone").value.trim(),
+        phone: phoneVal,
         organisation: document.getElementById("bdOrg").value.trim(),
         purpose: document.getElementById("bdPurpose").value.trim()
       };
 
-      showLoading("Submitting admin backdoor booking...");
+      showLoading(`Submitting admin backdoor booking for ${dateSlots.length} day(s)...`);
       try {
         const result = await callApiWithRetry(payload);
         if (!result.success) throw new Error(result.message);
@@ -636,32 +685,49 @@
         });
 
         if (!result.success) throw new Error(result.message);
-        const rows = result.data || [];
-        const tbody = document.getElementById("reportTableBody");
-        tbody.innerHTML = "";
-
-        if (rows.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">No approved bookings found for ${dateVal}.</td></tr>`;
-          return;
-        }
-
-        rows.forEach(r => {
-          tbody.innerHTML += `
-            <tr>
-              <td><strong>${r.bookingId}</strong></td>
-              <td>${r.facility}</td>
-              <td><span style="color:#2563eb; font-weight:600;">${r.start} - ${r.end}</span></td>
-              <td><strong>${r.bookerName}</strong><br><small style="color:#64748b;">${r.matricNumber}</small><br><small style="color:#0284c7; font-weight:600;">📞 ${r.phone || "N/A"}</small></td>
-              <td>${r.organisation || "N/A"}</td>
-              <td>${r.purpose || "-"}</td>
-            </tr>
-          `;
-        });
+        cachedReportRows = result.data || [];
+        renderReportTable();
       } catch (err) {
         alert("Failed to generate report: " + err.message);
       } finally {
         hideLoading();
       }
+    }
+
+    function renderReportTable() {
+      const tbody = document.getElementById("reportTableBody");
+      const facilityFilter = document.getElementById("reportFacilityFilter").value;
+      const dateVal = document.getElementById("reportDateInput").value;
+
+      tbody.innerHTML = "";
+
+      let filtered = cachedReportRows.filter(r => {
+        if (facilityFilter !== "ALL" && r.facility !== facilityFilter) return false;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">No approved bookings found for ${dateVal || "selected date"}.</td></tr>`;
+        return;
+      }
+
+      filtered.forEach(r => {
+        let phoneDisplay = String(r.phone || "").trim();
+        if (phoneDisplay && !phoneDisplay.startsWith("0") && !phoneDisplay.startsWith("+")) {
+          phoneDisplay = "0" + phoneDisplay;
+        }
+
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${r.bookingId}</strong></td>
+            <td>${r.facility}</td>
+            <td><span style="color:#2563eb; font-weight:600;">${r.start} - ${r.end}</span></td>
+            <td><strong>${r.bookerName}</strong><br><small style="color:#64748b;">Matric: ${r.matricNumber || "N/A"}</small><br><small style="color:#0284c7; font-weight:600;">📞 ${phoneDisplay || "N/A"}</small></td>
+            <td>${r.organisation || "N/A"}</td>
+            <td>${r.purpose || "-"}</td>
+          </tr>
+        `;
+      });
     }
 
     function renderFacilities() {
@@ -861,7 +927,7 @@
                         (b.email && b.email.toLowerCase().includes(searchQuery)) ||
                         (b.facility && b.facility.toLowerCase().includes(searchQuery)) ||
                         (b.purpose && b.purpose.toLowerCase().includes(searchQuery)) ||
-                        (b.phone && b.phone.toLowerCase().includes(searchQuery));
+                        (b.phone && String(b.phone).toLowerCase().includes(searchQuery));
           if (!match) return false;
         }
 
@@ -890,6 +956,11 @@
       }
 
       filtered.forEach(b => {
+        let phoneDisplay = String(b.phone || "").trim();
+        if (phoneDisplay && !phoneDisplay.startsWith("0") && !phoneDisplay.startsWith("+")) {
+          phoneDisplay = "0" + phoneDisplay;
+        }
+
         const slotsHtml = (b.rows || []).map(r => {
           const slotBadge = `<span class="badge ${r.status.toLowerCase()}" style="font-size:9px; padding:2px 6px; margin-left:4px;">${r.status}</span>`;
           return `<div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #e2e8f0; display:flex; justify-content:space-between; align-items:center; gap:8px;">
@@ -913,7 +984,7 @@
             ${slotsHtml}
             <button type="button" class="btn-refresh" style="background:#0f172a; color:white; width:100%; padding:6px; font-size:11px; margin-top:6px;" onclick="submitBatchSlotUpdate('${b.bookingId}')">✉️ Process & Send Email</button>
           </td>
-          <td><strong>${b.bookerName}</strong><br><small style="color:#64748b;">${b.matricNumber}</small><br><small style="color:#64748b;">${b.email}</small><br><small style="color:#0284c7; font-weight:600;">📞 ${b.phone || "N/A"}</small></td>
+          <td><strong>${b.bookerName}</strong><br><small style="color:#64748b;">Matric: ${b.matricNumber || "N/A"}</small><br><small style="color:#64748b;">${b.email}</small><br><small style="color:#0284c7; font-weight:600;">📞 ${phoneDisplay || "N/A"}</small></td>
           <td>${b.purpose || "-"}${adminNoteText}</td>
         `;
         desktopTbody.appendChild(tr);
@@ -931,7 +1002,7 @@
           <div class="booking-card-body">
             <div><strong>Facility:</strong> ${b.facility} <span class="jkp-tag">${b.jkp || "General"}</span></div>
             <div><strong>Booker:</strong> ${b.bookerName} (${b.matricNumber})</div>
-            <div><strong>Contact:</strong> 📞 ${b.phone || "N/A"} | ✉️ ${b.email}</div>
+            <div><strong>Contact:</strong> 📞 ${phoneDisplay || "N/A"} | ✉️ ${b.email}</div>
             <div><strong>Slots & Batch Actions:</strong><div style="margin-top: 4px;">${slotsHtml}</div></div>
             <div><strong>Purpose:</strong> ${b.purpose || "-"}${adminNoteText}</div>
           </div>
@@ -982,6 +1053,7 @@
       currentAdmin = { username: "", password: "" };
       cachedBookings = [];
       cachedFacilities = [];
+      cachedReportRows = [];
       dataLoaded = false;
       currentMaintenanceState = false;
       document.getElementById("dashboardView").classList.add("hidden");
