@@ -602,7 +602,6 @@
       });
     }
 
-    // Support Multi-Day Date Ranges in Admin Backdoor
     document.getElementById("backdoorForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const facility = document.getElementById("bdFacility").value;
@@ -965,7 +964,7 @@
           const slotBadge = `<span class="badge ${r.status.toLowerCase()}" style="font-size:9px; padding:2px 6px; margin-left:4px;">${r.status}</span>`;
           return `<div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #e2e8f0; display:flex; justify-content:space-between; align-items:center; gap:8px;">
             <div>📅 ${formatDateDisplay(r.date)}<br><small style="color:#2563eb; font-weight:600;">${formatTimeDisplay(r.start)} - ${formatTimeDisplay(r.end)}</small>${slotBadge}</div>
-            <select class="action-select slot-select-${b.bookingId}" data-row="${r.sheetRow}" style="width:100px; height:30px; font-size:11px;">
+            <select class="action-select slot-select-${b.bookingId}" data-row="${r.sheetRow}" data-date="${r.date}" data-start="${r.start}" style="width:100px; height:30px; font-size:11px;">
               <option value="APPROVED" ${r.status === "APPROVED" ? "selected" : ""}>Approve</option>
               <option value="REJECTED" ${r.status === "REJECTED" ? "selected" : ""}>Reject</option>
               <option value="CANCELLED" ${r.status === "CANCELLED" ? "selected" : ""}>Cancel</option>
@@ -1021,6 +1020,8 @@
       slotElements.forEach(el => {
         slotUpdates.push({
           sheetRow: el.getAttribute("data-row"),
+          date: el.getAttribute("data-date"),
+          start: el.getAttribute("data-start"),
           status: el.value
         });
       });
