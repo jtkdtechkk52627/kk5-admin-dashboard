@@ -231,14 +231,13 @@
             <tr>
               <th style="width: 15%;">BOOKING</th>
               <th style="width: 15%;">FACILITY</th>
-              <th style="width: 25%;">SLOTS &amp; INDIVIDUAL STATUS</th>
+              <th style="width: 30%;">SLOTS &amp; BATCH ACTIONS</th>
               <th style="width: 20%;">BOOKER &amp; CONTACT</th>
-              <th style="width: 15%;">PURPOSE</th>
-              <th style="width: 10%;">GROUP ACTIONS</th>
+              <th style="width: 20%;">PURPOSE</th>
             </tr>
           </thead>
           <tbody id="desktopTableBody">
-            <tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">Loading bookings...</td></tr>
+            <tr><td colspan="5" style="text-align:center; padding:30px; color:#64748b;">Loading bookings...</td></tr>
           </tbody>
         </table>
       </div>
@@ -885,7 +884,7 @@
 
       if (filtered.length === 0) {
         const emptyMsg = '<div style="text-align:center; padding:30px; color:#64748b; font-size:13px;">No matching bookings found.</div>';
-        desktopTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">No matching bookings found.</td></tr>`;
+        desktopTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:#64748b;">No matching bookings found.</td></tr>`;
         mobileContainer.innerHTML = emptyMsg;
         return;
       }
@@ -895,12 +894,11 @@
           const slotBadge = `<span class="badge ${r.status.toLowerCase()}" style="font-size:9px; padding:2px 6px; margin-left:4px;">${r.status}</span>`;
           return `<div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #e2e8f0; display:flex; justify-content:space-between; align-items:center; gap:8px;">
             <div>📅 ${formatDateDisplay(r.date)}<br><small style="color:#2563eb; font-weight:600;">${formatTimeDisplay(r.start)} - ${formatTimeDisplay(r.end)}</small>${slotBadge}</div>
-            <select class="action-select" style="width:90px; height:28px; font-size:11px;" onchange="updateSingleSlot(${r.sheetRow}, this.value)">
-              <option value="" disabled selected>Slot Action</option>
-              <option value="APPROVED">Approve</option>
-              <option value="REJECTED">Reject</option>
-              <option value="CANCELLED">Cancel</option>
-              <option value="PENDING">Pending</option>
+            <select class="action-select slot-select-${b.bookingId}" data-row="${r.sheetRow}" style="width:100px; height:30px; font-size:11px;">
+              <option value="APPROVED" ${r.status === "APPROVED" ? "selected" : ""}>Approve</option>
+              <option value="REJECTED" ${r.status === "REJECTED" ? "selected" : ""}>Reject</option>
+              <option value="CANCELLED" ${r.status === "CANCELLED" ? "selected" : ""}>Cancel</option>
+              <option value="PENDING" ${r.status === "PENDING" ? "selected" : ""}>Pending</option>
             </select>
           </div>`;
         }).join('');
@@ -911,18 +909,12 @@
         tr.innerHTML = `
           <td><strong>${b.bookingId}</strong><br><small style="color:#64748b;">${b.organisation || "Individual"}</small></td>
           <td><strong>${b.facility}</strong><br><span class="jkp-tag">${b.jkp || "General"}</span></td>
-          <td>${slotsHtml}</td>
+          <td>
+            ${slotsHtml}
+            <button type="button" class="btn-refresh" style="background:#0f172a; color:white; width:100%; padding:6px; font-size:11px; margin-top:6px;" onclick="submitBatchSlotUpdate('${b.bookingId}')">✉️ Process & Send Email</button>
+          </td>
           <td><strong>${b.bookerName}</strong><br><small style="color:#64748b;">${b.matricNumber}</small><br><small style="color:#64748b;">${b.email}</small><br><small style="color:#0284c7; font-weight:600;">📞 ${b.phone || "N/A"}</small></td>
           <td>${b.purpose || "-"}${adminNoteText}</td>
-          <td>
-            <select class="action-select" onchange="updateStatus('${b.bookingId}', this.value)">
-              <option value="" disabled selected>Group Action</option>
-              <option value="PENDING">All Pending</option>
-              <option value="APPROVED">Approve All</option>
-              <option value="REJECTED">Reject All</option>
-              <option value="CANCELLED">Cancel All</option>
-            </select>
-          </td>
         `;
         desktopTbody.appendChild(tr);
 
@@ -940,90 +932,47 @@
             <div><strong>Facility:</strong> ${b.facility} <span class="jkp-tag">${b.jkp || "General"}</span></div>
             <div><strong>Booker:</strong> ${b.bookerName} (${b.matricNumber})</div>
             <div><strong>Contact:</strong> 📞 ${b.phone || "N/A"} | ✉️ ${b.email}</div>
-            <div><strong>Slots & Status:</strong><div style="margin-top: 4px;">${slotsHtml}</div></div>
+            <div><strong>Slots & Batch Actions:</strong><div style="margin-top: 4px;">${slotsHtml}</div></div>
             <div><strong>Purpose:</strong> ${b.purpose || "-"}${adminNoteText}</div>
           </div>
-          <div class="booking-card-footer">
-            <span style="font-size:11px; color:var(--text-muted);">Group action:</span>
-            <select class="action-select" onchange="updateStatus('${b.bookingId}', this.value)">
-              <option value="" disabled selected>Group Action</option>
-              <option value="PENDING">All Pending</option>
-              <option value="APPROVED">Approve All</option>
-              <option value="REJECTED">Reject All</option>
-              <option value="CANCELLED">Cancel All</option>
-            </select>
+          <div class="booking-card-footer" style="flex-direction:column; gap:8px; align-items:stretch;">
+            <button type="button" class="btn-refresh" style="background:#0f172a; color:white; width:100%; padding:8px; font-size:12px;" onclick="submitBatchSlotUpdate('${b.bookingId}')">✉️ Process & Send Summary Email</button>
           </div>
         `;
         mobileContainer.appendChild(card);
       });
     }
 
-    async function updateSingleSlot(sheetRow, newStatus) {
-      let adminNotes = "";
-      if (newStatus === "REJECTED" || newStatus === "CANCELLED") {
-        adminNotes = prompt("Enter a reason / note for rejecting/cancelling this specific slot:") || "";
-        if (!adminNotes.trim()) {
-          alert("A reason is required.");
-          return;
-        }
-      } else {
-        if (!confirm(`Are you sure you want to change this slot status to ${newStatus}?`)) return;
-      }
+    async function submitBatchSlotUpdate(bookingId) {
+      const slotElements = document.querySelectorAll(`.slot-select-${bookingId}`);
+      const slotUpdates = [];
 
-      showLoading(`Updating slot status to ${newStatus}...`);
-      try {
-        const result = await callApiWithRetry({
-          action: "updateSingleSlotStatus",
-          username: currentAdmin.username,
-          password: currentAdmin.password,
-          sheetRow: sheetRow,
-          status: newStatus,
-          adminNotes: adminNotes
+      slotElements.forEach(el => {
+        slotUpdates.push({
+          sheetRow: el.getAttribute("data-row"),
+          status: el.value
         });
-        if (!result.success) throw new Error(result.message || "Failed to update slot status.");
+      });
 
-        alert("Slot status updated successfully!");
-        await fetchAllData();
-      } catch (err) {
-        alert("Error updating slot status: " + err.message);
-      } finally {
-        hideLoading();
-      }
-    }
+      const adminNotes = prompt("Enter an admin note/reason for this booking update (optional):") || "";
 
-    async function updateStatus(bookingId, newStatus) {
-      let adminNotes = "";
-      if (newStatus === "REJECTED" || newStatus === "CANCELLED") {
-        adminNotes = prompt("Enter a reason / note for the applicant:") || "";
-        if (!adminNotes.trim()) {
-          alert("A reason is required when rejecting or cancelling a booking.");
-          renderBookings();
-          return;
-        }
-      } else {
-        if (!confirm("Are you sure you want to update all slots for " + bookingId + " to " + newStatus + "?")) {
-          renderBookings();
-          return;
-        }
-      }
-
-      showLoading(`Updating booking group status to ${newStatus}...`);
+      showLoading("Processing slots and sending summary email...");
       try {
         const result = await callApiWithRetry({
-          action: "updateStatus",
+          action: "batchUpdateBookingSlots",
           username: currentAdmin.username,
           password: currentAdmin.password,
           bookingId: bookingId,
-          status: newStatus,
+          slotUpdates: slotUpdates,
           adminNotes: adminNotes
         });
-        if (!result.success) throw new Error(result.message || "Failed to update status.");
 
-        alert("Booking " + bookingId + " updated to " + newStatus);
+        if (!result.success) throw new Error(result.message);
+
+        alert("Booking processed and summary email sent successfully!");
         await fetchAllData();
       } catch (err) {
-        alert("Error updating status: " + err.message);
-        renderBookings();
+        alert("Error processing booking: " + err.message);
       } finally {
         hideLoading();
       }
