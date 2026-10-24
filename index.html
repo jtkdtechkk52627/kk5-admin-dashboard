@@ -229,17 +229,16 @@
         <table>
           <thead>
             <tr>
-              <th style="width: 16%;">BOOKING</th>
-              <th style="width: 18%;">FACILITY</th>
-              <th style="width: 20%;">SLOTS &amp; TIMES</th>
-              <th style="width: 18%;">BOOKER</th>
-              <th style="width: 16%;">PURPOSE</th>
-              <th style="width: 10%;">STATUS</th>
-              <th style="width: 10%;">ACTIONS</th>
+              <th style="width: 15%;">BOOKING</th>
+              <th style="width: 15%;">FACILITY</th>
+              <th style="width: 25%;">SLOTS &amp; INDIVIDUAL STATUS</th>
+              <th style="width: 20%;">BOOKER &amp; CONTACT</th>
+              <th style="width: 15%;">PURPOSE</th>
+              <th style="width: 10%;">GROUP ACTIONS</th>
             </tr>
           </thead>
           <tbody id="desktopTableBody">
-            <tr><td colspan="7" style="text-align:center; padding:30px; color:#64748b;">Loading bookings...</td></tr>
+            <tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">Loading bookings...</td></tr>
           </tbody>
         </table>
       </div>
@@ -291,7 +290,7 @@
     <!-- ADMIN BACKDOOR BOOKING VIEW -->
     <div id="backdoorBookingView" class="table-card hidden" style="max-width: 800px; margin: 0 auto;">
       <h3 style="margin:0 0 6px; font-size:18px; color:#0f172a;">⚡ Admin Backdoor Booking</h3>
-      <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Book on behalf of students/organisations. Bypasses 1-day advance restrictions and automatically sets status to <strong>APPROVED</strong> with instant calendar syncing.</p>
+      <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Book on behalf of students/organisations. Bypasses 1-day advance restrictions, allows booking inactive facilities, and automatically sets status to <strong>APPROVED</strong> with instant calendar syncing.</p>
       
       <form id="backdoorForm" style="display:grid; gap:16px;">
         <div class="form-group" style="margin-bottom:0;">
@@ -332,7 +331,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
         <div>
           <h3 style="margin:0 0 4px; font-size:18px; color:#0f172a;">📊 Daily Booking Report</h3>
-          <p style="font-size:13px; color:#64748b; margin:0;">View all approved facility bookings scheduled for a specific date.</p>
+          <p style="font-size:13px; color:#64748b; margin:0;">View all approved facility bookings sorted by facility and time.</p>
         </div>
         <div style="display:flex; gap:10px; align-items:flex-end;">
           <div>
@@ -350,7 +349,7 @@
               <th style="width: 15%;">BOOKING ID</th>
               <th style="width: 20%;">FACILITY</th>
               <th style="width: 15%;">TIME SLOT</th>
-              <th style="width: 20%;">BOOKER</th>
+              <th style="width: 20%;">BOOKER &amp; CONTACT</th>
               <th style="width: 15%;">ORGANISATION</th>
               <th style="width: 15%;">PURPOSE</th>
             </tr>
@@ -573,10 +572,10 @@
     function populateBackdoorFacilityDropdown() {
       const select = document.getElementById("bdFacility");
       select.innerHTML = '<option value="">Select facility...</option>';
+      // Admin backdoor allows booking even if inactive
       cachedFacilities.forEach(f => {
-        if (f.status === "ACTIVE") {
-          select.innerHTML += `<option value="${f.name}">${f.name}</option>`;
-        }
+        const inactiveLabel = f.status !== "ACTIVE" ? " (Inactive)" : "";
+        select.innerHTML += `<option value="${f.name}">${f.name}${inactiveLabel}</option>`;
       });
     }
 
@@ -653,7 +652,7 @@
               <td><strong>${r.bookingId}</strong></td>
               <td>${r.facility}</td>
               <td><span style="color:#2563eb; font-weight:600;">${r.start} - ${r.end}</span></td>
-              <td><strong>${r.bookerName}</strong><br><small style="color:#64748b;">${r.matricNumber}</small></td>
+              <td><strong>${r.bookerName}</strong><br><small style="color:#64748b;">${r.matricNumber}</small><br><small style="color:#0284c7; font-weight:600;">📞 ${r.phone || "N/A"}</small></td>
               <td>${r.organisation || "N/A"}</td>
               <td>${r.purpose || "-"}</td>
             </tr>
@@ -862,7 +861,8 @@
                         (b.matricNumber && b.matricNumber.toLowerCase().includes(searchQuery)) ||
                         (b.email && b.email.toLowerCase().includes(searchQuery)) ||
                         (b.facility && b.facility.toLowerCase().includes(searchQuery)) ||
-                        (b.purpose && b.purpose.toLowerCase().includes(searchQuery));
+                        (b.purpose && b.purpose.toLowerCase().includes(searchQuery)) ||
+                        (b.phone && b.phone.toLowerCase().includes(searchQuery));
           if (!match) return false;
         }
 
@@ -885,15 +885,25 @@
 
       if (filtered.length === 0) {
         const emptyMsg = '<div style="text-align:center; padding:30px; color:#64748b; font-size:13px;">No matching bookings found.</div>';
-        desktopTbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:#64748b;">No matching bookings found.</td></tr>`;
+        desktopTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">No matching bookings found.</td></tr>`;
         mobileContainer.innerHTML = emptyMsg;
         return;
       }
 
       filtered.forEach(b => {
-        const slotsHtml = (b.rows || []).map(r => 
-          `<div style="margin-bottom: 4px;">📅 ${formatDateDisplay(r.date)}<br><small style="color:#2563eb; font-weight:600;">${formatTimeDisplay(r.start)} - ${formatTimeDisplay(r.end)}</small></div>`
-        ).join('');
+        const slotsHtml = (b.rows || []).map(r => {
+          const slotBadge = `<span class="badge ${r.status.toLowerCase()}" style="font-size:9px; padding:2px 6px; margin-left:4px;">${r.status}</span>`;
+          return `<div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #e2e8f0; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <div>📅 ${formatDateDisplay(r.date)}<br><small style="color:#2563eb; font-weight:600;">${formatTimeDisplay(r.start)} - ${formatTimeDisplay(r.end)}</small>${slotBadge}</div>
+            <select class="action-select" style="width:90px; height:28px; font-size:11px;" onchange="updateSingleSlot(${r.sheetRow}, this.value)">
+              <option value="" disabled selected>Slot Action</option>
+              <option value="APPROVED">Approve</option>
+              <option value="REJECTED">Reject</option>
+              <option value="CANCELLED">Cancel</option>
+              <option value="PENDING">Pending</option>
+            </select>
+          </div>`;
+        }).join('');
 
         const adminNoteText = b.adminNotes ? `<br><small style="color:#b91c1c;">Admin note: ${b.adminNotes}</small>` : "";
 
@@ -902,16 +912,15 @@
           <td><strong>${b.bookingId}</strong><br><small style="color:#64748b;">${b.organisation || "Individual"}</small></td>
           <td><strong>${b.facility}</strong><br><span class="jkp-tag">${b.jkp || "General"}</span></td>
           <td>${slotsHtml}</td>
-          <td><strong>${b.bookerName}</strong><br><small style="color:#64748b;">${b.matricNumber}</small><br><small style="color:#64748b;">${b.email}</small></td>
+          <td><strong>${b.bookerName}</strong><br><small style="color:#64748b;">${b.matricNumber}</small><br><small style="color:#64748b;">${b.email}</small><br><small style="color:#0284c7; font-weight:600;">📞 ${b.phone || "N/A"}</small></td>
           <td>${b.purpose || "-"}${adminNoteText}</td>
-          <td><span class="badge ${b.status.toLowerCase()}">${b.status}</span></td>
           <td>
             <select class="action-select" onchange="updateStatus('${b.bookingId}', this.value)">
-              <option value="" disabled selected>Update</option>
-              <option value="PENDING">Pending</option>
-              <option value="APPROVED">Approve</option>
-              <option value="REJECTED">Reject</option>
-              <option value="CANCELLED">Cancel</option>
+              <option value="" disabled selected>Group Action</option>
+              <option value="PENDING">All Pending</option>
+              <option value="APPROVED">Approve All</option>
+              <option value="REJECTED">Reject All</option>
+              <option value="CANCELLED">Cancel All</option>
             </select>
           </td>
         `;
@@ -930,22 +939,56 @@
           <div class="booking-card-body">
             <div><strong>Facility:</strong> ${b.facility} <span class="jkp-tag">${b.jkp || "General"}</span></div>
             <div><strong>Booker:</strong> ${b.bookerName} (${b.matricNumber})</div>
-            <div><strong>Requested Slots:</strong><div style="margin-top: 4px;">${slotsHtml}</div></div>
+            <div><strong>Contact:</strong> 📞 ${b.phone || "N/A"} | ✉️ ${b.email}</div>
+            <div><strong>Slots & Status:</strong><div style="margin-top: 4px;">${slotsHtml}</div></div>
             <div><strong>Purpose:</strong> ${b.purpose || "-"}${adminNoteText}</div>
           </div>
           <div class="booking-card-footer">
-            <span style="font-size:11px; color:var(--text-muted);">Manage status:</span>
+            <span style="font-size:11px; color:var(--text-muted);">Group action:</span>
             <select class="action-select" onchange="updateStatus('${b.bookingId}', this.value)">
-              <option value="" disabled selected>Update</option>
-              <option value="PENDING">Pending</option>
-              <option value="APPROVED">Approve</option>
-              <option value="REJECTED">Reject</option>
-              <option value="CANCELLED">Cancel</option>
+              <option value="" disabled selected>Group Action</option>
+              <option value="PENDING">All Pending</option>
+              <option value="APPROVED">Approve All</option>
+              <option value="REJECTED">Reject All</option>
+              <option value="CANCELLED">Cancel All</option>
             </select>
           </div>
         `;
         mobileContainer.appendChild(card);
       });
+    }
+
+    async function updateSingleSlot(sheetRow, newStatus) {
+      let adminNotes = "";
+      if (newStatus === "REJECTED" || newStatus === "CANCELLED") {
+        adminNotes = prompt("Enter a reason / note for rejecting/cancelling this specific slot:") || "";
+        if (!adminNotes.trim()) {
+          alert("A reason is required.");
+          return;
+        }
+      } else {
+        if (!confirm(`Are you sure you want to change this slot status to ${newStatus}?`)) return;
+      }
+
+      showLoading(`Updating slot status to ${newStatus}...`);
+      try {
+        const result = await callApiWithRetry({
+          action: "updateSingleSlotStatus",
+          username: currentAdmin.username,
+          password: currentAdmin.password,
+          sheetRow: sheetRow,
+          status: newStatus,
+          adminNotes: adminNotes
+        });
+        if (!result.success) throw new Error(result.message || "Failed to update slot status.");
+
+        alert("Slot status updated successfully!");
+        await fetchAllData();
+      } catch (err) {
+        alert("Error updating slot status: " + err.message);
+      } finally {
+        hideLoading();
+      }
     }
 
     async function updateStatus(bookingId, newStatus) {
@@ -958,13 +1001,13 @@
           return;
         }
       } else {
-        if (!confirm("Are you sure you want to update " + bookingId + " to " + newStatus + "?")) {
+        if (!confirm("Are you sure you want to update all slots for " + bookingId + " to " + newStatus + "?")) {
           renderBookings();
           return;
         }
       }
 
-      showLoading(`Updating booking status to ${newStatus}...`);
+      showLoading(`Updating booking group status to ${newStatus}...`);
       try {
         const result = await callApiWithRetry({
           action: "updateStatus",
