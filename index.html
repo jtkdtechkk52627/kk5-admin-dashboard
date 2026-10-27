@@ -229,15 +229,17 @@
         <table>
           <thead>
             <tr>
-              <th style="width: 15%;">BOOKING</th>
-              <th style="width: 15%;">FACILITY</th>
-              <th style="width: 30%;">SLOTS &amp; BATCH ACTIONS</th>
-              <th style="width: 20%;">BOOKER &amp; CONTACT</th>
-              <th style="width: 20%;">PURPOSE</th>
+              <th style="width: 16%;">BOOKING</th>
+              <th style="width: 18%;">FACILITY</th>
+              <th style="width: 20%;">SLOTS &amp; TIMES</th>
+              <th style="width: 18%;">BOOKER</th>
+              <th style="width: 16%;">PURPOSE</th>
+              <th style="width: 10%;">STATUS</th>
+              <th style="width: 10%;">ACTIONS</th>
             </tr>
           </thead>
           <tbody id="desktopTableBody">
-            <tr><td colspan="5" style="text-align:center; padding:30px; color:#64748b;">Loading bookings...</td></tr>
+            <tr><td colspan="7" style="text-align:center; padding:30px; color:#64748b;">Loading bookings...</td></tr>
           </tbody>
         </table>
       </div>
@@ -289,36 +291,27 @@
     <!-- ADMIN BACKDOOR BOOKING VIEW -->
     <div id="backdoorBookingView" class="table-card hidden" style="max-width: 800px; margin: 0 auto;">
       <h3 style="margin:0 0 6px; font-size:18px; color:#0f172a;">⚡ Admin Backdoor Booking</h3>
-      <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Book on behalf of students/organisations. Bypasses 1-day advance restrictions, allows multi-day date ranges, and sets status to <strong>APPROVED</strong> with instant calendar syncing.</p>
+      <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Book on behalf of students/organisations. Bypasses 1-day advance restrictions and automatically sets status to <strong>APPROVED</strong> with instant calendar syncing.</p>
       
       <form id="backdoorForm" style="display:grid; gap:16px;">
         <div class="form-group" style="margin-bottom:0;">
           <label for="bdFacility">Facility</label>
           <select id="bdFacility" required><option value="">Select facility...</option></select>
         </div>
-        
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
           <div class="form-group" style="margin-bottom:0;">
-            <label for="bdStartDate">Start Date</label>
-            <input type="date" id="bdStartDate" required>
+            <label for="bdDate">Date</label>
+            <input type="date" id="bdDate" required>
           </div>
           <div class="form-group" style="margin-bottom:0;">
-            <label for="bdEndDate">End Date</label>
-            <input type="date" id="bdEndDate" required>
-          </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-          <div class="form-group" style="margin-bottom:0;">
-            <label for="bdStartTime">Daily Start Time</label>
+            <label for="bdStartTime">Start Time</label>
             <input type="time" id="bdStartTime" required>
           </div>
           <div class="form-group" style="margin-bottom:0;">
-            <label for="bdEndTime">Daily End Time</label>
+            <label for="bdEndTime">End Time</label>
             <input type="time" id="bdEndTime" required>
           </div>
         </div>
-
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
           <div class="form-group" style="margin-bottom:0;"><label for="bdName">Booker Name</label><input type="text" id="bdName" required placeholder="Full Name"></div>
           <div class="form-group" style="margin-bottom:0;"><label for="bdMatric">Matric Number</label><input type="text" id="bdMatric" required placeholder="e.g. 24001958"></div>
@@ -339,15 +332,9 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
         <div>
           <h3 style="margin:0 0 4px; font-size:18px; color:#0f172a;">📊 Daily Booking Report</h3>
-          <p style="font-size:13px; color:#64748b; margin:0;">View all approved facility bookings sorted by facility and start time.</p>
+          <p style="font-size:13px; color:#64748b; margin:0;">View all approved facility bookings scheduled for a specific date.</p>
         </div>
-        <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-          <div>
-            <label for="reportFacilityFilter" style="margin-bottom:2px;">Facility Filter</label>
-            <select id="reportFacilityFilter" style="height:38px; font-size:13px;" onchange="renderReportTable()">
-              <option value="ALL">All Facilities</option>
-            </select>
-          </div>
+        <div style="display:flex; gap:10px; align-items:flex-end;">
           <div>
             <label for="reportDateInput" style="margin-bottom:2px;">Select Date</label>
             <input type="date" id="reportDateInput" style="height:38px;">
@@ -363,7 +350,7 @@
               <th style="width: 15%;">BOOKING ID</th>
               <th style="width: 20%;">FACILITY</th>
               <th style="width: 15%;">TIME SLOT</th>
-              <th style="width: 20%;">BOOKER &amp; CONTACT</th>
+              <th style="width: 20%;">BOOKER</th>
               <th style="width: 15%;">ORGANISATION</th>
               <th style="width: 15%;">PURPOSE</th>
             </tr>
@@ -382,7 +369,6 @@
     let currentAdmin = { username: "", password: "" };
     let cachedBookings = [];
     let cachedFacilities = [];
-    let cachedReportRows = [];
     let activeTab = "bookings";
     let dataLoaded = false;
     let currentMaintenanceState = false;
@@ -522,7 +508,6 @@
 
         cachedFacilities = facRes.data || [];
         populateBackdoorFacilityDropdown();
-        populateReportFacilityDropdown();
 
         dataLoaded = true;
         updateLastSyncTimestamp();
@@ -589,53 +574,22 @@
       const select = document.getElementById("bdFacility");
       select.innerHTML = '<option value="">Select facility...</option>';
       cachedFacilities.forEach(f => {
-        const inactiveLabel = f.status !== "ACTIVE" ? " (Inactive)" : "";
-        select.innerHTML += `<option value="${f.name}">${f.name}${inactiveLabel}</option>`;
-      });
-    }
-
-    function populateReportFacilityDropdown() {
-      const select = document.getElementById("reportFacilityFilter");
-      select.innerHTML = '<option value="ALL">All Facilities</option>';
-      cachedFacilities.forEach(f => {
-        select.innerHTML += `<option value="${f.name}">${f.name}</option>`;
+        if (f.status === "ACTIVE") {
+          select.innerHTML += `<option value="${f.name}">${f.name}</option>`;
+        }
       });
     }
 
     document.getElementById("backdoorForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const facility = document.getElementById("bdFacility").value;
-      const startDateStr = document.getElementById("bdStartDate").value;
-      const endDateStr = document.getElementById("bdEndDate").value;
+      const date = document.getElementById("bdDate").value;
       const startTime = document.getElementById("bdStartTime").value;
       const endTime = document.getElementById("bdEndTime").value;
 
-      if (!facility || !startDateStr || !endDateStr || !startTime || !endTime) {
+      if (!facility || !date || !startTime || !endTime) {
         alert("Please fill in all required slot and facility details.");
         return;
-      }
-
-      const startD = new Date(startDateStr);
-      const endD = new Date(endDateStr);
-
-      if (endD < startD) {
-        alert("End date cannot be earlier than start date.");
-        return;
-      }
-
-      const dateSlots = [];
-      let currentD = new Date(startD);
-      while (currentD <= endD) {
-        const yyyy = currentD.getFullYear();
-        const mm = String(currentD.getMonth() + 1).padStart(2, '0');
-        const dd = String(currentD.getDate()).padStart(2, '0');
-        dateSlots.push({ date: `${yyyy}-${mm}-${dd}`, startTime: startTime, endTime: endTime });
-        currentD.setDate(currentD.getDate() + 1);
-      }
-
-      let phoneVal = document.getElementById("bdPhone").value.trim();
-      if (phoneVal && !phoneVal.startsWith("0") && !phoneVal.startsWith("+")) {
-        phoneVal = "0" + phoneVal;
       }
 
       const payload = {
@@ -643,16 +597,16 @@
         username: currentAdmin.username,
         password: currentAdmin.password,
         facility: facility,
-        dateSlots: dateSlots,
+        dateSlots: [{ date: date, startTime: startTime, endTime: endTime }],
         bookerName: document.getElementById("bdName").value.trim(),
         matricNumber: document.getElementById("bdMatric").value.trim(),
         email: document.getElementById("bdEmail").value.trim().toLowerCase(),
-        phone: phoneVal,
+        phone: document.getElementById("bdPhone").value.trim(),
         organisation: document.getElementById("bdOrg").value.trim(),
         purpose: document.getElementById("bdPurpose").value.trim()
       };
 
-      showLoading(`Submitting admin backdoor booking for ${dateSlots.length} day(s)...`);
+      showLoading("Submitting admin backdoor booking...");
       try {
         const result = await callApiWithRetry(payload);
         if (!result.success) throw new Error(result.message);
@@ -684,49 +638,32 @@
         });
 
         if (!result.success) throw new Error(result.message);
-        cachedReportRows = result.data || [];
-        renderReportTable();
+        const rows = result.data || [];
+        const tbody = document.getElementById("reportTableBody");
+        tbody.innerHTML = "";
+
+        if (rows.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">No approved bookings found for ${dateVal}.</td></tr>`;
+          return;
+        }
+
+        rows.forEach(r => {
+          tbody.innerHTML += `
+            <tr>
+              <td><strong>${r.bookingId}</strong></td>
+              <td>${r.facility}</td>
+              <td><span style="color:#2563eb; font-weight:600;">${r.start} - ${r.end}</span></td>
+              <td><strong>${r.bookerName}</strong><br><small style="color:#64748b;">${r.matricNumber}</small></td>
+              <td>${r.organisation || "N/A"}</td>
+              <td>${r.purpose || "-"}</td>
+            </tr>
+          `;
+        });
       } catch (err) {
         alert("Failed to generate report: " + err.message);
       } finally {
         hideLoading();
       }
-    }
-
-    function renderReportTable() {
-      const tbody = document.getElementById("reportTableBody");
-      const facilityFilter = document.getElementById("reportFacilityFilter").value;
-      const dateVal = document.getElementById("reportDateInput").value;
-
-      tbody.innerHTML = "";
-
-      let filtered = cachedReportRows.filter(r => {
-        if (facilityFilter !== "ALL" && r.facility !== facilityFilter) return false;
-        return true;
-      });
-
-      if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">No approved bookings found for ${dateVal || "selected date"}.</td></tr>`;
-        return;
-      }
-
-      filtered.forEach(r => {
-        let phoneDisplay = String(r.phone || "").trim();
-        if (phoneDisplay && !phoneDisplay.startsWith("0") && !phoneDisplay.startsWith("+")) {
-          phoneDisplay = "0" + phoneDisplay;
-        }
-
-        tbody.innerHTML += `
-          <tr>
-            <td><strong>${r.bookingId}</strong></td>
-            <td>${r.facility}</td>
-            <td><span style="color:#2563eb; font-weight:600;">${r.start} - ${r.end}</span></td>
-            <td><strong>${r.bookerName}</strong><br><small style="color:#64748b;">Matric: ${r.matricNumber || "N/A"}</small><br><small style="color:#0284c7; font-weight:600;">📞 ${phoneDisplay || "N/A"}</small></td>
-            <td>${r.organisation || "N/A"}</td>
-            <td>${r.purpose || "-"}</td>
-          </tr>
-        `;
-      });
     }
 
     function renderFacilities() {
@@ -925,8 +862,7 @@
                         (b.matricNumber && b.matricNumber.toLowerCase().includes(searchQuery)) ||
                         (b.email && b.email.toLowerCase().includes(searchQuery)) ||
                         (b.facility && b.facility.toLowerCase().includes(searchQuery)) ||
-                        (b.purpose && b.purpose.toLowerCase().includes(searchQuery)) ||
-                        (b.phone && String(b.phone).toLowerCase().includes(searchQuery));
+                        (b.purpose && b.purpose.toLowerCase().includes(searchQuery));
           if (!match) return false;
         }
 
@@ -949,29 +885,15 @@
 
       if (filtered.length === 0) {
         const emptyMsg = '<div style="text-align:center; padding:30px; color:#64748b; font-size:13px;">No matching bookings found.</div>';
-        desktopTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:#64748b;">No matching bookings found.</td></tr>`;
+        desktopTbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:#64748b;">No matching bookings found.</td></tr>`;
         mobileContainer.innerHTML = emptyMsg;
         return;
       }
 
       filtered.forEach(b => {
-        let phoneDisplay = String(b.phone || "").trim();
-        if (phoneDisplay && !phoneDisplay.startsWith("0") && !phoneDisplay.startsWith("+")) {
-          phoneDisplay = "0" + phoneDisplay;
-        }
-
-        const slotsHtml = (b.rows || []).map(r => {
-          const slotBadge = `<span class="badge ${r.status.toLowerCase()}" style="font-size:9px; padding:2px 6px; margin-left:4px;">${r.status}</span>`;
-          return `<div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #e2e8f0; display:flex; justify-content:space-between; align-items:center; gap:8px;">
-            <div>📅 ${formatDateDisplay(r.date)}<br><small style="color:#2563eb; font-weight:600;">${formatTimeDisplay(r.start)} - ${formatTimeDisplay(r.end)}</small>${slotBadge}</div>
-            <select class="action-select slot-select-${b.bookingId}" data-row="${r.sheetRow}" data-date="${r.date}" data-start="${r.start}" style="width:100px; height:30px; font-size:11px;">
-              <option value="APPROVED" ${r.status === "APPROVED" ? "selected" : ""}>Approve</option>
-              <option value="REJECTED" ${r.status === "REJECTED" ? "selected" : ""}>Reject</option>
-              <option value="CANCELLED" ${r.status === "CANCELLED" ? "selected" : ""}>Cancel</option>
-              <option value="PENDING" ${r.status === "PENDING" ? "selected" : ""}>Pending</option>
-            </select>
-          </div>`;
-        }).join('');
+        const slotsHtml = (b.rows || []).map(r => 
+          `<div style="margin-bottom: 4px;">📅 ${formatDateDisplay(r.date)}<br><small style="color:#2563eb; font-weight:600;">${formatTimeDisplay(r.start)} - ${formatTimeDisplay(r.end)}</small></div>`
+        ).join('');
 
         const adminNoteText = b.adminNotes ? `<br><small style="color:#b91c1c;">Admin note: ${b.adminNotes}</small>` : "";
 
@@ -979,12 +901,19 @@
         tr.innerHTML = `
           <td><strong>${b.bookingId}</strong><br><small style="color:#64748b;">${b.organisation || "Individual"}</small></td>
           <td><strong>${b.facility}</strong><br><span class="jkp-tag">${b.jkp || "General"}</span></td>
-          <td>
-            ${slotsHtml}
-            <button type="button" class="btn-refresh" style="background:#0f172a; color:white; width:100%; padding:6px; font-size:11px; margin-top:6px;" onclick="submitBatchSlotUpdate('${b.bookingId}')">✉️ Process & Send Email</button>
-          </td>
-          <td><strong>${b.bookerName}</strong><br><small style="color:#64748b;">Matric: ${b.matricNumber || "N/A"}</small><br><small style="color:#64748b;">${b.email}</small><br><small style="color:#0284c7; font-weight:600;">📞 ${phoneDisplay || "N/A"}</small></td>
+          <td>${slotsHtml}</td>
+          <td><strong>${b.bookerName}</strong><br><small style="color:#64748b;">${b.matricNumber}</small><br><small style="color:#64748b;">${b.email}</small></td>
           <td>${b.purpose || "-"}${adminNoteText}</td>
+          <td><span class="badge ${b.status.toLowerCase()}">${b.status}</span></td>
+          <td>
+            <select class="action-select" onchange="updateStatus('${b.bookingId}', this.value)">
+              <option value="" disabled selected>Update</option>
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approve</option>
+              <option value="REJECTED">Reject</option>
+              <option value="CANCELLED">Cancel</option>
+            </select>
+          </td>
         `;
         desktopTbody.appendChild(tr);
 
@@ -1001,50 +930,57 @@
           <div class="booking-card-body">
             <div><strong>Facility:</strong> ${b.facility} <span class="jkp-tag">${b.jkp || "General"}</span></div>
             <div><strong>Booker:</strong> ${b.bookerName} (${b.matricNumber})</div>
-            <div><strong>Contact:</strong> 📞 ${phoneDisplay || "N/A"} | ✉️ ${b.email}</div>
-            <div><strong>Slots & Batch Actions:</strong><div style="margin-top: 4px;">${slotsHtml}</div></div>
+            <div><strong>Requested Slots:</strong><div style="margin-top: 4px;">${slotsHtml}</div></div>
             <div><strong>Purpose:</strong> ${b.purpose || "-"}${adminNoteText}</div>
           </div>
-          <div class="booking-card-footer" style="flex-direction:column; gap:8px; align-items:stretch;">
-            <button type="button" class="btn-refresh" style="background:#0f172a; color:white; width:100%; padding:8px; font-size:12px;" onclick="submitBatchSlotUpdate('${b.bookingId}')">✉️ Process & Send Summary Email</button>
+          <div class="booking-card-footer">
+            <span style="font-size:11px; color:var(--text-muted);">Manage status:</span>
+            <select class="action-select" onchange="updateStatus('${b.bookingId}', this.value)">
+              <option value="" disabled selected>Update</option>
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approve</option>
+              <option value="REJECTED">Reject</option>
+              <option value="CANCELLED">Cancel</option>
+            </select>
           </div>
         `;
         mobileContainer.appendChild(card);
       });
     }
 
-    async function submitBatchSlotUpdate(bookingId) {
-      const slotElements = document.querySelectorAll(`.slot-select-${bookingId}`);
-      const slotUpdates = [];
+    async function updateStatus(bookingId, newStatus) {
+      let adminNotes = "";
+      if (newStatus === "REJECTED" || newStatus === "CANCELLED") {
+        adminNotes = prompt("Enter a reason / note for the applicant:") || "";
+        if (!adminNotes.trim()) {
+          alert("A reason is required when rejecting or cancelling a booking.");
+          renderBookings();
+          return;
+        }
+      } else {
+        if (!confirm("Are you sure you want to update " + bookingId + " to " + newStatus + "?")) {
+          renderBookings();
+          return;
+        }
+      }
 
-      slotElements.forEach(el => {
-        slotUpdates.push({
-          sheetRow: el.getAttribute("data-row"),
-          date: el.getAttribute("data-date"),
-          start: el.getAttribute("data-start"),
-          status: el.value
-        });
-      });
-
-      const adminNotes = prompt("Enter an admin note/reason for this booking update (optional):") || "";
-
-      showLoading("Processing slots and sending summary email...");
+      showLoading(`Updating booking status to ${newStatus}...`);
       try {
         const result = await callApiWithRetry({
-          action: "batchUpdateBookingSlots",
+          action: "updateStatus",
           username: currentAdmin.username,
           password: currentAdmin.password,
           bookingId: bookingId,
-          slotUpdates: slotUpdates,
+          status: newStatus,
           adminNotes: adminNotes
         });
+        if (!result.success) throw new Error(result.message || "Failed to update status.");
 
-        if (!result.success) throw new Error(result.message);
-
-        alert("Booking processed and summary email sent successfully!");
+        alert("Booking " + bookingId + " updated to " + newStatus);
         await fetchAllData();
       } catch (err) {
-        alert("Error processing booking: " + err.message);
+        alert("Error updating status: " + err.message);
+        renderBookings();
       } finally {
         hideLoading();
       }
@@ -1054,7 +990,6 @@
       currentAdmin = { username: "", password: "" };
       cachedBookings = [];
       cachedFacilities = [];
-      cachedReportRows = [];
       dataLoaded = false;
       currentMaintenanceState = false;
       document.getElementById("dashboardView").classList.add("hidden");
