@@ -1011,6 +1011,7 @@
                         (b.bookerName && b.bookerName.toLowerCase().includes(searchQuery)) ||
                         (b.matricNumber && b.matricNumber.toLowerCase().includes(searchQuery)) ||
                         (b.email && b.email.toLowerCase().includes(searchQuery)) ||
+                        (b.phone && b.phone.toLowerCase().includes(searchQuery)) ||
                         (b.facility && b.facility.toLowerCase().includes(searchQuery)) ||
                         (b.purpose && b.purpose.toLowerCase().includes(searchQuery));
           if (!match) return false;
@@ -1052,7 +1053,7 @@
           <td><strong>${b.bookingId}</strong><br><small style="color:#64748b;">${b.organisation || "Individual"}</small></td>
           <td><strong>${b.facility}</strong><br><span class="jkp-tag">${b.jkp || "General"}</span></td>
           <td>${slotsHtml}</td>
-          <td><strong>${b.bookerName}</strong><br><small style="color:#64748b;">${b.matricNumber}</small><br><small style="color:#64748b;">${b.email}</small></td>
+          <td><strong>${b.bookerName}</strong><br><small style="color:#64748b;">Matric: ${b.matricNumber}</small><br><small style="color:#64748b;">Email: ${b.email}</small><br><small style="color:#64748b; font-weight:600;">Phone: ${b.phone || "N/A"}</small></td>
           <td>${b.purpose || "-"}${adminNoteText}</td>
           <td><span class="badge ${b.status.toLowerCase()}">${b.status}</span></td>
           <td>
@@ -1080,6 +1081,7 @@
           <div class="booking-card-body">
             <div><strong>Facility:</strong> ${b.facility} <span class="jkp-tag">${b.jkp || "General"}</span></div>
             <div><strong>Booker:</strong> ${b.bookerName} (${b.matricNumber})</div>
+            <div><strong>Contact:</strong> ${b.email} | ${b.phone || "N/A"}</div>
             <div><strong>Requested Slots:</strong><div style="margin-top: 4px;">${slotsHtml}</div></div>
             <div><strong>Purpose:</strong> ${b.purpose || "-"}${adminNoteText}</div>
           </div>
@@ -1136,7 +1138,6 @@
       }
     }
 
-    
     function logoutAdmin() {
       currentAdmin = { username: "", password: "" };
       cachedBookings = [];
