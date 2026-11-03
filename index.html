@@ -296,7 +296,6 @@
       <h3 style="margin:0 0 6px; font-size:18px; color:#0f172a;">⚡ Admin Backdoor Booking</h3>
       <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Book on behalf of anyone with an interactive slot selector. Bypasses all restrictions: allows booking unavailable/inactive facilities, same-day bookings, unlimited hours per day, and arbitrary date ranges.</p>
       
-      <!-- Step 1: Select Facility & Dates -->
       <div id="bdStep1">
         <div class="form-group">
           <label for="bdFacilitySelect">Select Facility</label>
@@ -319,7 +318,6 @@
         <button type="button" class="btn-refresh" style="background:#0f172a; color:white; width:100%; height:42px;" onclick="loadBackdoorAvailability()">Load Interactive Slots Matrix</button>
       </div>
 
-      <!-- Step 2: Interactive Slot Selection & Booker Details -->
       <div id="bdStep2" class="hidden" style="margin-top:20px; border-top:1px solid #e2e8f0; padding-top:20px;">
         <button type="button" class="back-button" onclick="backToBdStep1()">← Change Facility / Dates</button>
         <h4 id="bdSelectedFacilityTitle" style="margin:0 0 10px; color:#0f172a;"></h4>
