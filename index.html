@@ -102,6 +102,9 @@
     .jkp-tag { display: inline-block; background: #e0f2fe; color: #0369a1; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-top: 4px; text-transform: uppercase; }
     .action-select { width: 110px; height: 34px; padding: 0 6px; font-size: 12px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: 600; cursor: pointer; }
 
+    .back-button { border: none; background: transparent; padding: 0; margin-bottom: 16px; color: #2563eb; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .back-button:hover { text-decoration: underline; }
+
     /* Colored Facility Status Dropdowns */
     .facility-status-select {
       width: 100%;
@@ -288,43 +291,56 @@
       </div>
     </div>
 
-    <!-- ADMIN BACKDOOR BOOKING VIEW -->
-    <div id="backdoorBookingView" class="table-card hidden" style="max-width: 800px; margin: 0 auto;">
+    <!-- ADMIN BACKDOOR BOOKING VIEW (INTERACTIVE SLOT SELECTOR) -->
+    <div id="backdoorBookingView" class="table-card hidden" style="max-width: 900px; margin: 0 auto;">
       <h3 style="margin:0 0 6px; font-size:18px; color:#0f172a;">⚡ Admin Backdoor Booking</h3>
-      <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Book on behalf of students/organisations. Bypasses 1-day advance restrictions and automatically sets status to <strong>APPROVED</strong> with instant calendar syncing.</p>
+      <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Book on behalf of anyone with an interactive slot selector. Bypasses all restrictions: allows booking unavailable/inactive facilities, same-day bookings, unlimited hours per day, and arbitrary date ranges.</p>
       
-      <form id="backdoorForm" style="display:grid; gap:16px;">
-        <div class="form-group" style="margin-bottom:0;">
-          <label for="bdFacility">Facility</label>
-          <select id="bdFacility" required><option value="">Select facility...</option></select>
+      <!-- Step 1: Select Facility & Dates -->
+      <div id="bdStep1">
+        <div class="form-group">
+          <label for="bdFacilitySelect">Select Facility</label>
+          <select id="bdFacilitySelect" class="action-select" style="width:100%; height:42px;">
+            <option value="">-- Choose facility --</option>
+          </select>
         </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
-          <div class="form-group" style="margin-bottom:0;">
-            <label for="bdDate">Date</label>
-            <input type="date" id="bdDate" required>
-          </div>
-          <div class="form-group" style="margin-bottom:0;">
-            <label for="bdStartTime">Start Time</label>
-            <input type="time" id="bdStartTime" required>
-          </div>
-          <div class="form-group" style="margin-bottom:0;">
-            <label for="bdEndTime">End Time</label>
-            <input type="time" id="bdEndTime" required>
-          </div>
-        </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-          <div class="form-group" style="margin-bottom:0;"><label for="bdName">Booker Name</label><input type="text" id="bdName" required placeholder="Full Name"></div>
-          <div class="form-group" style="margin-bottom:0;"><label for="bdMatric">Matric Number</label><input type="text" id="bdMatric" required placeholder="e.g. 24001958"></div>
-        </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-          <div class="form-group" style="margin-bottom:0;"><label for="bdEmail">Email</label><input type="email" id="bdEmail" required placeholder="user@siswa.um.edu.my"></div>
-          <div class="form-group" style="margin-bottom:0;"><label for="bdPhone">Phone Number</label><input type="tel" id="bdPhone" required placeholder="0104563287"></div>
-        </div>
-        <div class="form-group" style="margin-bottom:0;"><label for="bdOrg">Organisation / Bureau</label><input type="text" id="bdOrg" required placeholder="e.g. JTK"></div>
-        <div class="form-group" style="margin-bottom:0;"><label for="bdPurpose">Purpose / Usage</label><textarea id="bdPurpose" required placeholder="Purpose of booking..."></textarea></div>
 
-        <button type="submit" class="btn-refresh" style="background:#0f172a; color:white; width:100%; height:46px; font-size:15px; margin-top:10px;">Submit Approved Booking (Backdoor)</button>
-      </form>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:16px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="bdStartDate">Start Date</label>
+            <input type="date" id="bdStartDate">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="bdEndDate">End Date</label>
+            <input type="date" id="bdEndDate">
+          </div>
+        </div>
+
+        <button type="button" class="btn-refresh" style="background:#0f172a; color:white; width:100%; height:42px;" onclick="loadBackdoorAvailability()">Load Interactive Slots Matrix</button>
+      </div>
+
+      <!-- Step 2: Interactive Slot Selection & Booker Details -->
+      <div id="bdStep2" class="hidden" style="margin-top:20px; border-top:1px solid #e2e8f0; padding-top:20px;">
+        <button type="button" class="back-button" onclick="backToBdStep1()">← Change Facility / Dates</button>
+        <h4 id="bdSelectedFacilityTitle" style="margin:0 0 10px; color:#0f172a;"></h4>
+        
+        <div id="bdAvailabilityContainer" style="margin-bottom:20px;"></div>
+
+        <form id="bdDetailsForm" style="display:grid; gap:14px; border-top:1px solid #e2e8f0; padding-top:16px;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+            <div class="form-group" style="margin-bottom:0;"><label for="bdName">Booker Name</label><input type="text" id="bdName" required placeholder="Full Name"></div>
+            <div class="form-group" style="margin-bottom:0;"><label for="bdMatric">Matric Number</label><input type="text" id="bdMatric" required placeholder="e.g. 24001958"></div>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+            <div class="form-group" style="margin-bottom:0;"><label for="bdEmail">Email</label><input type="email" id="bdEmail" required placeholder="user@siswa.um.edu.my"></div>
+            <div class="form-group" style="margin-bottom:0;"><label for="bdPhone">Phone Number</label><input type="tel" id="bdPhone" required placeholder="0104563287"></div>
+          </div>
+          <div class="form-group" style="margin-bottom:0;"><label for="bdOrg">Organisation / Bureau</label><input type="text" id="bdOrg" required placeholder="e.g. JTK"></div>
+          <div class="form-group" style="margin-bottom:0;"><label for="bdPurpose">Purpose / Usage</label><textarea id="bdPurpose" required placeholder="Purpose of booking..."></textarea></div>
+
+          <button type="submit" class="btn-refresh" style="background:#22c55e; color:white; width:100%; height:46px; font-size:15px; margin-top:10px;">Submit Approved Booking (Backdoor)</button>
+        </form>
+      </div>
     </div>
 
     <!-- DAILY REPORT EXPORT VIEW -->
@@ -372,6 +388,9 @@
     let activeTab = "bookings";
     let dataLoaded = false;
     let currentMaintenanceState = false;
+
+    let bdSelectedFacilityObj = null;
+    let bdSelectedSlotsByDate = {};
 
     function showLoading(text = "Processing request...") {
       document.getElementById("loadingText").textContent = text;
@@ -571,37 +590,167 @@
     }
 
     function populateBackdoorFacilityDropdown() {
-      const select = document.getElementById("bdFacility");
-      select.innerHTML = '<option value="">Select facility...</option>';
+      const select = document.getElementById("bdFacilitySelect");
+      if (!select) return;
+      select.innerHTML = '<option value="">-- Choose facility --</option>';
       cachedFacilities.forEach(f => {
-        if (f.status === "ACTIVE") {
-          select.innerHTML += `<option value="${f.name}">${f.name}</option>`;
-        }
+        const inactiveLabel = f.status !== "ACTIVE" ? " (Currently Unavailable/Inactive)" : "";
+        select.innerHTML += `<option value="${f.name}">${f.name}${inactiveLabel}</option>`;
       });
     }
 
-    document.getElementById("backdoorForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const facility = document.getElementById("bdFacility").value;
-      const date = document.getElementById("bdDate").value;
-      const startTime = document.getElementById("bdStartTime").value;
-      const endTime = document.getElementById("bdEndTime").value;
+    function backToBdStep1() {
+      document.getElementById("bdStep2").classList.add("hidden");
+      document.getElementById("bdStep1").classList.remove("hidden");
+    }
 
-      if (!facility || !date || !startTime || !endTime) {
-        alert("Please fill in all required slot and facility details.");
+    async function loadBackdoorAvailability() {
+      const facilityName = document.getElementById("bdFacilitySelect").value;
+      const startStr = document.getElementById("bdStartDate").value;
+      const endStr = document.getElementById("bdEndDate").value;
+
+      if (!facilityName || !startStr || !endStr) {
+        alert("Please select a facility, start date, and end date.");
         return;
+      }
+
+      if (endStr < startStr) {
+        alert("End date cannot be earlier than start date.");
+        return;
+      }
+
+      bdSelectedFacilityObj = cachedFacilities.find(f => f.name === facilityName);
+      if (!bdSelectedFacilityObj) {
+        alert("Facility details not found.");
+        return;
+      }
+
+      const hoursDisplay = (bdSelectedFacilityObj.opening && bdSelectedFacilityObj.closing) ? ` (${bdSelectedFacilityObj.opening} - ${bdSelectedFacilityObj.closing})` : "";
+      document.getElementById("bdSelectedFacilityTitle").textContent = `Facility: ${facilityName}${hoursDisplay}`;
+      document.getElementById("bdStep1").classList.add("hidden");
+      document.getElementById("bdStep2").classList.remove("hidden");
+
+      const container = document.getElementById("bdAvailabilityContainer");
+      container.innerHTML = "<div style='color:#64748b;'>Loading slot availability...</div>";
+
+      bdSelectedSlotsByDate = {};
+
+      try {
+        const dates = getDatesBetweenLocal(new Date(startStr), new Date(endStr));
+        container.innerHTML = "";
+
+        const openMin = parseTimeToMinutesLocal(bdSelectedFacilityObj.opening || "08:00");
+        const closeMin = parseTimeToMinutesLocal(bdSelectedFacilityObj.closing || "23:00");
+        const SLOT_INTERVAL = 30;
+
+        dates.forEach(dateObj => {
+          const yyyy = dateObj.getFullYear();
+          const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+          const dd = String(dateObj.getDate()).padStart(2, '0');
+          const dateKey = `${yyyy}-${mm}-${dd}`;
+
+          const dayBox = document.createElement("div");
+          dayBox.style.cssText = "background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:10px;";
+          
+          const dayTitle = document.createElement("div");
+          dayTitle.style.cssText = "font-weight:700; font-size:13px; margin-bottom:8px; color:#334155;";
+          dayTitle.textContent = dateObj.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+          dayBox.appendChild(dayTitle);
+
+          const grid = document.createElement("div");
+          grid.style.cssText = "display:grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap:6px;";
+
+          for (let m = openMin; m + SLOT_INTERVAL <= closeMin; m += SLOT_INTERVAL) {
+            const slotStart = minutesToTimeStrLocal(m);
+            const slotEnd = minutesToTimeStrLocal(m + SLOT_INTERVAL);
+            
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.textContent = `${slotStart} - ${slotEnd}`;
+            btn.style.cssText = "border:1px solid #cbd5e1; background:white; border-radius:6px; padding:6px 4px; text-align:center; font-size:11px; cursor:pointer;";
+            
+            btn.onclick = () => {
+              if (!bdSelectedSlotsByDate[dateKey]) bdSelectedSlotsByDate[dateKey] = [];
+              const idx = bdSelectedSlotsByDate[dateKey].findIndex(s => s.start === slotStart);
+              if (idx > -1) {
+                bdSelectedSlotsByDate[dateKey].splice(idx, 1);
+                btn.style.background = "white";
+                btn.style.color = "#0f172a";
+                btn.style.borderColor = "#cbd5e1";
+              } else {
+                bdSelectedSlotsByDate[dateKey].push({ start: slotStart, end: slotEnd });
+                btn.style.background = "#2563eb";
+                btn.style.color = "white";
+                btn.style.borderColor = "#2563eb";
+              }
+            };
+            grid.appendChild(btn);
+          }
+          dayBox.appendChild(grid);
+          container.appendChild(dayBox);
+        });
+      } catch (err) {
+        container.innerHTML = `<div style="color:#dc2626;">Error rendering slots: ${err.message}</div>`;
+      }
+    }
+
+    function getDatesBetweenLocal(start, end) {
+      const dates = []; let cur = new Date(start);
+      while (cur <= end) { dates.push(new Date(cur)); cur.setDate(cur.getDate() + 1); }
+      return dates;
+    }
+    function parseTimeToMinutesLocal(t) {
+      if (!t) return 480;
+      const p = String(t).split(":");
+      return p.length >= 2 ? Number(p[0]) * 60 + Number(p[1]) : 480;
+    }
+    function minutesToTimeStrLocal(m) {
+      return String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+    }
+
+    document.getElementById("bdDetailsForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!bdSelectedFacilityObj) return;
+
+      const dateSlots = [];
+      for (const dateStr of Object.keys(bdSelectedSlotsByDate)) {
+        const slots = bdSelectedSlotsByDate[dateStr];
+        if (!slots || slots.length === 0) continue;
+
+        slots.sort((a, b) => parseTimeToMinutesLocal(a.start) - parseTimeToMinutesLocal(b.start));
+
+        let currentBlock = { start: slots[0].start, end: slots[0].end };
+        for (let i = 1; i < slots.length; i++) {
+          if (slots[i].start === currentBlock.end) {
+            currentBlock.end = slots[i].end;
+          } else {
+            dateSlots.push({ date: dateStr, startTime: currentBlock.start, endTime: currentBlock.end });
+            currentBlock = { start: slots[i].start, end: slots[i].end };
+          }
+        }
+        dateSlots.push({ date: dateStr, startTime: currentBlock.start, endTime: currentBlock.end });
+      }
+
+      if (dateSlots.length === 0) {
+        alert("Please select at least one time slot.");
+        return;
+      }
+
+      let phoneVal = document.getElementById("bdPhone").value.trim();
+      if (phoneVal && !phoneVal.startsWith("0") && !phoneVal.startsWith("+")) {
+        phoneVal = "0" + phoneVal;
       }
 
       const payload = {
         action: "adminBookForSomeone",
         username: currentAdmin.username,
         password: currentAdmin.password,
-        facility: facility,
-        dateSlots: [{ date: date, startTime: startTime, endTime: endTime }],
+        facility: bdSelectedFacilityObj.name,
+        dateSlots: dateSlots,
         bookerName: document.getElementById("bdName").value.trim(),
         matricNumber: document.getElementById("bdMatric").value.trim(),
         email: document.getElementById("bdEmail").value.trim().toLowerCase(),
-        phone: document.getElementById("bdPhone").value.trim(),
+        phone: phoneVal,
         organisation: document.getElementById("bdOrg").value.trim(),
         purpose: document.getElementById("bdPurpose").value.trim()
       };
@@ -611,7 +760,8 @@
         const result = await callApiWithRetry(payload);
         if (!result.success) throw new Error(result.message);
         alert("Backdoor booking successful! Booking ID: " + result.bookingId + " (Status: APPROVED)");
-        document.getElementById("backdoorForm").reset();
+        document.getElementById("bdDetailsForm").reset();
+        backToBdStep1();
         await fetchAllData();
         switchTab("bookings");
       } catch (err) {
