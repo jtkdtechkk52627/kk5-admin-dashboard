@@ -74,7 +74,7 @@
 
     /* Responsive Table / Cards Switcher */
     .table-card { background: white; border-radius: 12px; padding: 14px; border: 1px solid #e2e8f0; }
-    
+
     /* Desktop Table */
     .desktop-table-wrapper { display: none; overflow-x: auto; }
     @media (min-width: 900px) { .desktop-table-wrapper { display: block; } }
@@ -154,7 +154,7 @@
     <div class="hero-banner">
       <div>
         <h1>KK5 Admin Dashboard</h1>
-        <p>Manage facility booking requests & facility statuses.</p>
+        <p>Manage facility booking requests &amp; facility statuses.</p>
         <div id="lastSyncNotice" style="font-size: 12px; color: #38bdf8; margin-top: 6px;">Last synced: Never</div>
       </div>
       <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
@@ -254,7 +254,7 @@
     <div id="facilitiesManagementView" class="table-card hidden">
       <div style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
         <div>
-          <h3 style="margin:0 0 4px; font-size:16px; color:#0f172a;">Facility Availability & Closure Notices</h3>
+          <h3 style="margin:0 0 4px; font-size:16px; color:#0f172a;">Facility Availability &amp; Closure Notices</h3>
           <p style="font-size:13px; color:#64748b; margin:0;">Toggle facilities active/inactive and provide reasons for maintenance or closures.</p>
         </div>
         <div style="width: 220px;">
@@ -268,7 +268,7 @@
           </select>
         </div>
       </div>
-      
+
       <div class="desktop-table-wrapper">
         <table>
           <thead>
@@ -294,7 +294,7 @@
     <div id="backdoorBookingView" class="table-card hidden" style="max-width: 900px; margin: 0 auto;">
       <h3 style="margin:0 0 6px; font-size:18px; color:#0f172a;">⚡ Admin Backdoor Booking</h3>
       <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Book on behalf of anyone with an interactive slot selector. Bypasses all restrictions: allows booking unavailable/inactive facilities, same-day bookings, unlimited hours per day, and arbitrary date ranges.</p>
-      
+
       <!-- Step 1: Select Facility & Dates -->
       <div id="bdStep1">
         <div class="form-group">
@@ -322,7 +322,7 @@
       <div id="bdStep2" class="hidden" style="margin-top:20px; border-top:1px solid #e2e8f0; padding-top:20px;">
         <button type="button" class="back-button" onclick="backToBdStep1()">← Change Facility / Dates</button>
         <h4 id="bdSelectedFacilityTitle" style="margin:0 0 10px; color:#0f172a;"></h4>
-        
+
         <div id="bdAvailabilityContainer" style="margin-bottom:20px;"></div>
 
         <form id="bdDetailsForm" style="display:grid; gap:14px; border-top:1px solid #e2e8f0; padding-top:16px;">
@@ -407,6 +407,13 @@
       document.getElementById("lastSyncNotice").textContent = `Last synced: ${dateString} at ${timeString}`;
     }
 
+    function parseLocalDateInput(dateStr) {
+      if (!dateStr) return null;
+      const parts = String(dateStr).split("-");
+      if (parts.length !== 3) return new Date(dateStr);
+      return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    }
+
     async function callApiWithRetry(payload, retries = 3, delay = 1000) {
       for (let i = 0; i < retries; i++) {
         try {
@@ -446,7 +453,7 @@
 
         document.getElementById("loginView").classList.add("hidden");
         document.getElementById("dashboardView").classList.remove("hidden");
-        
+
         await checkMaintenanceStatus();
         await fetchAllData();
       } catch (err) {
@@ -551,10 +558,10 @@
       const facilitiesView = document.getElementById("facilitiesManagementView");
       const backdoorView = document.getElementById("backdoorBookingView");
       const reportView = document.getElementById("dailyReportView");
-      
+
       const statsSection = document.getElementById("statsSection");
       const filterSection = document.getElementById("filterSection");
-      
+
       const btnBookings = document.getElementById("tabBookingsBtn");
       const btnFacilities = document.getElementById("tabFacilitiesBtn");
       const btnBackdoor = document.getElementById("tabBackdoorBtn");
@@ -635,7 +642,7 @@
       bdSelectedSlotsByDate = {};
 
       try {
-        const dates = getDatesBetweenLocal(new Date(startStr), new Date(endStr));
+        const dates = getDatesBetweenLocal(parseLocalDateInput(startStr), parseLocalDateInput(endStr));
         container.innerHTML = "";
 
         const openMin = parseTimeToMinutesLocal(bdSelectedFacilityObj.opening || "08:00");
@@ -650,7 +657,7 @@
 
           const dayBox = document.createElement("div");
           dayBox.style.cssText = "background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:10px;";
-          
+
           const dayTitle = document.createElement("div");
           dayTitle.style.cssText = "font-weight:700; font-size:13px; margin-bottom:8px; color:#334155;";
           dayTitle.textContent = dateObj.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
@@ -662,12 +669,12 @@
           for (let m = openMin; m + SLOT_INTERVAL <= closeMin; m += SLOT_INTERVAL) {
             const slotStart = minutesToTimeStrLocal(m);
             const slotEnd = minutesToTimeStrLocal(m + SLOT_INTERVAL);
-            
+
             const btn = document.createElement("button");
             btn.type = "button";
             btn.textContent = `${slotStart} - ${slotEnd}`;
             btn.style.cssText = "border:1px solid #cbd5e1; background:white; border-radius:6px; padding:6px 4px; text-align:center; font-size:11px; cursor:pointer;";
-            
+
             btn.onclick = () => {
               if (!bdSelectedSlotsByDate[dateKey]) bdSelectedSlotsByDate[dateKey] = [];
               const idx = bdSelectedSlotsByDate[dateKey].findIndex(s => s.start === slotStart);
@@ -760,6 +767,7 @@
         if (!result.success) throw new Error(result.message);
         alert("Backdoor booking successful! Booking ID: " + result.bookingId + " (Status: APPROVED)");
         document.getElementById("bdDetailsForm").reset();
+        bdSelectedSlotsByDate = {};
         backToBdStep1();
         await fetchAllData();
         switchTab("bookings");
@@ -962,28 +970,6 @@
       });
     }
 
-    function formatDateDisplay(dateVal) {
-      if (!dateVal) return "";
-      try {
-        const d = new Date(dateVal);
-        if (isNaN(d.getTime())) return String(dateVal);
-        return d.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
-      } catch (e) {
-        return String(dateVal);
-      }
-    }
-
-    function formatTimeDisplay(timeVal) {
-      if (!timeVal) return "";
-      if (typeof timeVal === "string" && timeVal.includes("T")) {
-        try {
-          const d = new Date(timeVal);
-          if (!isNaN(d.getTime())) return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
-        } catch (e) {}
-      }
-      return String(timeVal);
-    }
-
     function renderBookings() {
       const desktopTbody = document.getElementById("desktopTableBody");
       const mobileContainer = document.getElementById("mobileCardsContainer");
@@ -998,10 +984,10 @@
         if (statusVal !== "ALL" && b.status !== statusVal) return false;
         if (facilityVal !== "ALL" && b.facility !== facilityVal) return false;
         if (jkpVal !== "ALL" && b.jkp !== jkpVal) return false;
-        
+
         if (dateVal) {
-          const filterD = new Date(dateVal).toDateString();
-          const matchDate = (b.rows || []).some(r => new Date(r.date).toDateString() === filterD);
+          const filterD = parseLocalDateInput(dateVal).toDateString();
+          const matchDate = (b.rows || []).some(r => parseLocalDateInput(r.date).toDateString() === filterD);
           if (!matchDate) return false;
         }
 
@@ -1090,7 +1076,7 @@
             <div><strong>Facility:</strong> ${b.facility} <span class="jkp-tag">${b.jkp || "General"}</span></div>
             <div><strong>Booker:</strong> ${b.bookerName} (${b.matricNumber})</div>
             <div><strong>Contact:</strong> ${b.email} | ${b.phone || "N/A"}</div>
-            <div><strong>Slots & Review:</strong><div style="margin-top: 4px;">${slotsHtml}</div></div>
+            <div><strong>Slots &amp; Review:</strong><div style="margin-top: 4px;">${slotsHtml}</div></div>
             <div><strong>Purpose:</strong> ${b.purpose || "-"}</div>
           </div>
           <div class="booking-card-footer" style="flex-direction:column; gap:8px;">
@@ -1163,6 +1149,8 @@
       currentAdmin = { username: "", password: "" };
       cachedBookings = [];
       cachedFacilities = [];
+      bdSelectedFacilityObj = null;
+      bdSelectedSlotsByDate = {};
       dataLoaded = false;
       currentMaintenanceState = false;
       document.getElementById("dashboardView").classList.add("hidden");
