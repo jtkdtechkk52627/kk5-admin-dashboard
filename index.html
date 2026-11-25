@@ -379,7 +379,7 @@
   </div>
 
   <script>
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw3n23Sg5vLufUpGZp9S6tRvbVwTbp1FvS9Fj5DYBIsXH2hriNJznl9EJEC_a9145s7/exec";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxRV6Oj4qyHsgyNq2gmsmAWXO2_1c0fBNRgs6JBiSU3Qv6F0afe9KafwxzrAajJHD9m/exec";
 
     let currentAdmin = { username: "", password: "" };
     let cachedBookings = [];
@@ -1041,7 +1041,6 @@
       }
 
       filtered.forEach(b => {
-        // Render each slot with its own individual status dropdown and note prompt capabilities
         const slotsHtml = (b.rows || []).map(r => {
           const badgeClass = (r.status || 'PENDING').toLowerCase();
           return `
