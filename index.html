@@ -64,7 +64,8 @@
     .topbar { background: var(--ink); color: #fff; border-radius: var(--r-lg); padding: var(--s-4) var(--s-5); display: flex; flex-direction: column; gap: var(--s-4); margin-bottom: var(--s-4); }
     @media (min-width: 840px) { .topbar { flex-direction: row; align-items: center; justify-content: space-between; } }
     .topbar-id { display: flex; align-items: center; gap: var(--s-3); }
-    .topbar h1 { font-size: 22px; }
+    .topbar h1 { font-size: 22px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .scope-pill { background: var(--accent-soft); color: var(--accent-strong); font-family: var(--font-body); font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 99px; letter-spacing: 0; }
     #lastSyncNotice { font-size: 13px; color: #a9bbb3; margin-top: 2px; }
     .topbar-actions { display: flex; gap: var(--s-2); flex-wrap: wrap; align-items: center; }
     .maint { border-color: transparent; color: #fff; }
@@ -196,7 +197,7 @@
       <div class="topbar-id">
         <div class="brand" aria-hidden="true">KK5</div>
         <div>
-          <h1>Admin dashboard</h1>
+          <h1>Admin dashboard <span id="jkpScopeBadge" class="scope-pill hidden"></span></h1>
           <div id="lastSyncNotice">Last synced: never</div>
         </div>
       </div>
@@ -256,8 +257,8 @@
     <div id="facilitiesManagementView" class="card hidden">
       <div class="view-head">
         <div>
-          <h3>Facility availability</h3>
-          <p>Switch facilities on or off and add a closure notice that users will see.</p>
+          <h3 id="facilitiesViewTitle">Facility availability</h3>
+          <p id="facilitiesViewSubtitle">Switch facilities on or off and add a closure notice that users will see.</p>
         </div>
         <div class="view-tools"><div>
           <label for="facilitySortSelect">Sort facilities</label>
@@ -369,7 +370,7 @@
 
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxRV6Oj4qyHsgyNq2gmsmAWXO2_1c0fBNRgs6JBiSU3Qv6F0afe9KafwxzrAajJHD9m/exec";
 
-    let currentAdmin = { username: "", password: "" };
+    let currentAdmin = { username: "", password: "", allowedJkp: "" };
     let cachedBookings = [];
     let cachedFacilities = [];
     let activeTab = "bookings";
@@ -378,6 +379,50 @@
 
     let bdSelectedFacilityObj = null;
     let bdSelectedSlotsByDate = {};
+
+    function normalizeJkp(jkp) {
+      const cleaned = String(jkp || "").trim().toLowerCase();
+      if (cleaned === "mt" || cleaned === "majlis tertinggi") return "mt";
+      return cleaned;
+    }
+
+    function isScopedToJkp() {
+      return Boolean(normalizeJkp(currentAdmin.allowedJkp));
+    }
+
+    function matchesAllowedJkp(jkpValue) {
+      if (!isScopedToJkp()) return true;
+      return normalizeJkp(jkpValue) === normalizeJkp(currentAdmin.allowedJkp);
+    }
+
+    function getScopedFacilities() {
+      return (cachedFacilities || []).filter(f => matchesAllowedJkp(f.jkp));
+    }
+
+    function getScopedBookings() {
+      return (cachedBookings || []).filter(b => matchesAllowedJkp(b.jkp));
+    }
+
+    function applyJkpScopeUi() {
+      const badge = document.getElementById("jkpScopeBadge");
+      const maintBtn = document.getElementById("maintenanceToggleBtn");
+      const facTitle = document.getElementById("facilitiesViewTitle");
+      const facSubtitle = document.getElementById("facilitiesViewSubtitle");
+
+      if (isScopedToJkp()) {
+        badge.textContent = `${currentAdmin.allowedJkp} only`;
+        badge.classList.remove("hidden");
+        maintBtn.classList.add("hidden");
+        facTitle.textContent = `${currentAdmin.allowedJkp} facility availability`;
+        facSubtitle.textContent = `Showing and managing facilities assigned to ${currentAdmin.allowedJkp} only.`;
+      } else {
+        badge.textContent = "All JKPs";
+        badge.classList.remove("hidden");
+        maintBtn.classList.remove("hidden");
+        facTitle.textContent = "Facility availability";
+        facSubtitle.textContent = "Switch facilities on or off and add a closure notice that users will see.";
+      }
+    }
 
     function showLoading(text = "Processing request…") {
       document.getElementById("loadingText").textContent = text;
@@ -438,6 +483,8 @@
 
         currentAdmin.username = user;
         currentAdmin.password = pass;
+        currentAdmin.allowedJkp = String(result.allowedJkp || "").trim();
+        applyJkpScopeUi();
 
         document.getElementById("loginView").classList.add("hidden");
         document.getElementById("dashboardView").classList.remove("hidden");
@@ -473,6 +520,10 @@
     }
 
     async function toggleMaintenanceMode() {
+      if (isScopedToJkp()) {
+        toast("Only full admin accounts can toggle system-wide maintenance mode.");
+        return;
+      }
       const newState = !currentMaintenanceState;
       const noticePrompt = newState ? (prompt("Enter maintenance notice message for users:", "The booking system is currently under maintenance.") || "System under maintenance.") : "";
 
@@ -498,6 +549,16 @@
       }
     }
 
+    function recalculateSummaryFromBookings(bookingsList) {
+      return {
+        total: bookingsList.length,
+        pending: bookingsList.filter(b => b.status === "PENDING").length,
+        approved: bookingsList.filter(b => b.status === "APPROVED").length,
+        rejected: bookingsList.filter(b => b.status === "REJECTED").length,
+        cancelled: bookingsList.filter(b => b.status === "CANCELLED").length
+      };
+    }
+
     async function fetchAllData() {
       showLoading("Syncing dashboard data…");
       try {
@@ -509,11 +570,17 @@
         if (!dashRes.success) throw new Error(dashRes.message || "Failed to load bookings.");
         if (!facRes.success) throw new Error(facRes.message || "Failed to load facilities.");
 
-        cachedBookings = dashRes.data.bookings || [];
-        updateSummaryStats(dashRes.data.summary);
-        populateFilterDropdowns();
+        if (dashRes.data && dashRes.data.allowedJkp !== undefined) {
+          currentAdmin.allowedJkp = String(dashRes.data.allowedJkp || "").trim();
+          applyJkpScopeUi();
+        }
 
+        cachedBookings = dashRes.data.bookings || [];
         cachedFacilities = facRes.data || [];
+
+        const scopedBookings = getScopedBookings();
+        updateSummaryStats(isScopedToJkp() ? recalculateSummaryFromBookings(scopedBookings) : dashRes.data.summary);
+        populateFilterDropdowns();
         populateBackdoorFacilityDropdown();
 
         dataLoaded = true;
@@ -557,8 +624,9 @@
     function populateBackdoorFacilityDropdown() {
       const select = document.getElementById("bdFacilitySelect");
       if (!select) return;
+      const availableFacilities = getScopedFacilities();
       select.innerHTML = '<option value="">Choose a facility</option>';
-      cachedFacilities.forEach(f => {
+      availableFacilities.forEach(f => {
         const label = f.status !== "ACTIVE" ? " (inactive)" : "";
         select.innerHTML += `<option value="${esc(f.name)}">${esc(f.name)}${label}</option>`;
       });
@@ -583,8 +651,8 @@
       if (!facilityName || !startStr || !endStr) { toast("Please select a facility, start date and end date."); return; }
       if (endStr < startStr) { toast("End date cannot be earlier than start date."); return; }
 
-      bdSelectedFacilityObj = cachedFacilities.find(f => f.name === facilityName);
-      if (!bdSelectedFacilityObj) { toast("Facility details not found."); return; }
+      bdSelectedFacilityObj = getScopedFacilities().find(f => f.name === facilityName);
+      if (!bdSelectedFacilityObj) { toast("Facility details not found or outside your JKP scope."); return; }
 
       const hoursDisplay = (bdSelectedFacilityObj.opening && bdSelectedFacilityObj.closing) ? ` · ${bdSelectedFacilityObj.opening} – ${bdSelectedFacilityObj.closing}` : "";
       document.getElementById("bdSelectedFacilityTitle").textContent = facilityName + hoursDisplay;
@@ -727,7 +795,11 @@
       try {
         const result = await callApiWithRetry({ action: "getDailyReportData", username: currentAdmin.username, password: currentAdmin.password, date: dateVal });
         if (!result.success) throw new Error(result.message);
-        const rows = result.data || [];
+        let rows = result.data || [];
+        if (isScopedToJkp()) {
+          const allowedNames = new Set(getScopedFacilities().map(f => String(f.name || "").trim().toLowerCase()));
+          rows = rows.filter(r => allowedNames.has(String(r.facility || "").trim().toLowerCase()));
+        }
         const tbody = document.getElementById("reportTableBody");
 
         if (rows.length === 0) {
@@ -754,8 +826,9 @@
       const tbody = document.getElementById("facilitiesTableBody");
       const mobileContainer = document.getElementById("mobileFacilitiesContainer");
       const sortBy = document.getElementById("facilitySortSelect").value;
+      const scopedFacilities = getScopedFacilities();
 
-      const sorted = [...cachedFacilities].sort((a, b) => {
+      const sorted = [...scopedFacilities].sort((a, b) => {
         if (sortBy === "name_asc") return a.name.localeCompare(b.name);
         if (sortBy === "name_desc") return b.name.localeCompare(a.name);
         if (sortBy === "status_active") return (a.status === "ACTIVE" ? 0 : 1) - (b.status === "ACTIVE" ? 0 : 1);
@@ -768,8 +841,11 @@
       mobileContainer.innerHTML = "";
 
       if (sorted.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="empty">No facilities found.</td></tr>`;
-        mobileContainer.innerHTML = `<div class="empty">No facilities found.</div>`;
+        const emptyMsg = isScopedToJkp()
+          ? `No facilities assigned to ${esc(currentAdmin.allowedJkp)}.`
+          : "No facilities found.";
+        tbody.innerHTML = `<tr><td colspan="5" class="empty">${emptyMsg}</td></tr>`;
+        mobileContainer.innerHTML = `<div class="empty">${emptyMsg}</div>`;
         return;
       }
 
@@ -853,10 +929,26 @@
     function populateFilterDropdowns() {
       const facilitySelect = document.getElementById("facilityFilter");
       const jkpSelect = document.getElementById("jkpFilter");
-      const facilities = [...new Set(cachedBookings.map(b => b.facility).filter(Boolean))].sort();
-      const jkps = [...new Set(cachedBookings.map(b => b.jkp).filter(Boolean))].sort();
+      const scopedBookings = getScopedBookings();
+      const scopedFacilities = getScopedFacilities();
+
+      const facilities = [...new Set([
+        ...scopedBookings.map(b => b.facility).filter(Boolean),
+        ...scopedFacilities.map(f => f.name).filter(Boolean)
+      ])].sort();
+
       facilitySelect.innerHTML = '<option value="ALL">All facilities</option>' + facilities.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join("");
-      jkpSelect.innerHTML = '<option value="ALL">All JKP</option>' + jkps.map(j => `<option value="${esc(j)}">${esc(j)}</option>`).join("");
+
+      if (isScopedToJkp()) {
+        const matchedJkp = scopedBookings.map(b => b.jkp).find(Boolean) || currentAdmin.allowedJkp;
+        jkpSelect.innerHTML = `<option value="${esc(matchedJkp)}" selected>${esc(matchedJkp)}</option>`;
+        jkpSelect.value = matchedJkp;
+        jkpSelect.disabled = true;
+      } else {
+        const jkps = [...new Set(cachedBookings.map(b => b.jkp).filter(Boolean))].sort();
+        jkpSelect.disabled = false;
+        jkpSelect.innerHTML = '<option value="ALL">All JKP</option>' + jkps.map(j => `<option value="${esc(j)}">${esc(j)}</option>`).join("");
+      }
     }
 
     function badge(status) {
@@ -875,10 +967,10 @@
       const dateVal = document.getElementById("dateFilter").value;
       const sortBy = document.getElementById("sortSelect").value;
 
-      const filtered = cachedBookings.filter(b => {
+      const filtered = getScopedBookings().filter(b => {
         if (statusVal !== "ALL" && b.status !== statusVal) return false;
         if (facilityVal !== "ALL" && b.facility !== facilityVal) return false;
-        if (jkpVal !== "ALL" && b.jkp !== jkpVal) return false;
+        if (jkpVal !== "ALL" && normalizeJkp(b.jkp) !== normalizeJkp(jkpVal)) return false;
         if (dateVal) {
           const filterD = parseLocalDateInput(dateVal).toDateString();
           if (!(b.rows || []).some(r => parseLocalDateInput(r.date).toDateString() === filterD)) return false;
@@ -1011,13 +1103,16 @@
     }
 
     function logoutAdmin() {
-      currentAdmin = { username: "", password: "" };
+      currentAdmin = { username: "", password: "", allowedJkp: "" };
       cachedBookings = [];
       cachedFacilities = [];
       bdSelectedFacilityObj = null;
       bdSelectedSlotsByDate = {};
       dataLoaded = false;
       currentMaintenanceState = false;
+      document.getElementById("jkpScopeBadge").classList.add("hidden");
+      document.getElementById("maintenanceToggleBtn").classList.remove("hidden");
+      document.getElementById("jkpFilter").disabled = false;
       document.getElementById("dashboardView").classList.add("hidden");
       document.getElementById("loginView").classList.remove("hidden");
       document.getElementById("username").value = "";
