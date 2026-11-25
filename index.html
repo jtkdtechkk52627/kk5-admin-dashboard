@@ -4,135 +4,177 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KK5 Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-color: #f1f5f9;
-      --card-bg: #ffffff;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --border-color: #cbd5e1;
-      --dark-banner: #0f172a;
+      --bg: #f2f5f3; --surface: #fff; --ink: #13201b; --muted: #5b6b64; --line: #dbe3de; --line-soft: #edf1ee;
+      --accent: #0e6b58; --accent-strong: #0a5446; --accent-soft: #e3f2ed;
+      --warn: #a24b00; --warn-soft: #fff4e5; --warn-line: #f5cf9f;
+      --danger: #b42318; --danger-strong: #8f1c13; --danger-soft: #fdecea; --danger-line: #f5c2bd;
+      --font-head: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+      --font-body: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --r-sm: 8px; --r-md: 12px; --r-lg: 20px;
+      --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px; --s-6: 40px;
+      --shadow: 0 1px 2px rgba(19,32,27,.05), 0 8px 24px -12px rgba(19,32,27,.18);
     }
-
     * { box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: var(--bg-color); margin: 0; padding: 12px; color: var(--text-main); }
-    @media (min-width: 768px) { body { padding: 20px; } }
-    .container { max-width: 1400px; margin: 0 auto; }
-
-    /* Login Screen */
-    .login-box { max-width: 380px; margin: 80px auto; background: white; padding: 24px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
-    .login-box h2 { margin-top: 0; font-size: 22px; color: #0f172a; }
-    .login-box p { color: #64748b; font-size: 13px; margin-bottom: 20px; }
-    .form-group { margin-bottom: 16px; }
-    label { display: block; font-weight: 700; font-size: 11px; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
-    input, select, textarea { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; background: #fff; }
-    input, select { height: 42px; }
-    textarea { resize: vertical; min-height: 80px; }
-    input:focus, select:focus, textarea:focus { border-color: #0f172a; }
-    .btn-login { width: 100%; height: 42px; background: #0f172a; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
-    .error-msg { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 10px; border-radius: 8px; font-size: 13px; margin-top: 12px; text-align: center; }
+    body { margin: 0; font-family: var(--font-body); background: var(--bg); color: var(--ink); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+    h1, h2, h3, h4 { font-family: var(--font-head); letter-spacing: -.02em; line-height: 1.15; margin: 0; }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
     .hidden { display: none !important; }
+    .container { max-width: 1400px; margin: 0 auto; padding: var(--s-4) var(--s-4) 80px; }
+    @media (min-width: 768px) { .container { padding: var(--s-5) var(--s-5) 80px; } }
+    .brand { flex: none; width: 44px; height: 44px; border-radius: var(--r-md); background: var(--accent); color: #fff; display: grid; place-items: center; font: 700 17px var(--font-head); letter-spacing: -.03em; }
 
-    /* Loading Overlay */
-    #loadingOverlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(2px);
-      display: flex; flex-direction: column; justify-content: center; align-items: center;
-      z-index: 9999; color: white; font-weight: 600; gap: 12px;
-    }
-    .spinner {
-      width: 40px; height: 40px; border: 4px solid rgba(255, 255, 255, 0.3);
-      border-top: 4px solid #ffffff; border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    /* Controls */
+    label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 6px; }
+    input, select, textarea { width: 100%; padding: 8px 12px; border: 1px solid #c4cfc9; border-radius: var(--r-sm); font: 15px var(--font-body); background: #fff; color: var(--ink); }
+    input, select { height: 42px; }
+    textarea { resize: vertical; min-height: 88px; }
+    input:focus, select:focus, textarea:focus { outline: 3px solid var(--accent-soft); border-color: var(--accent); }
+    .form-group { margin-bottom: var(--s-4); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 40px; padding: 0 var(--s-4); border: 1px solid transparent; border-radius: var(--r-sm); font: 600 14px var(--font-body); cursor: pointer; transition: background .15s, border-color .15s; white-space: nowrap; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-strong); }
+    .btn-ghost { background: rgba(255,255,255,.1); color: #fff; border-color: rgba(255,255,255,.22); }
+    .btn-ghost:hover { background: rgba(255,255,255,.2); }
+    .btn-outline { background: #fff; color: var(--ink); border-color: #c4cfc9; }
+    .btn-outline:hover { border-color: var(--accent); background: var(--accent-soft); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { background: var(--danger-strong); }
+    .btn-sm { height: 34px; padding: 0 var(--s-3); font-size: 13px; }
+    .btn-block { width: 100%; }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
 
-    /* Hero Banner */
-    .hero-banner { background: var(--dark-banner); color: white; border-radius: 14px; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
-    @media (min-width: 640px) { .hero-banner { flex-direction: row; justify-content: space-between; align-items: center; padding: 20px 24px; } }
-    .hero-banner h1 { margin: 0; font-size: 22px; font-weight: 700; }
-    .hero-banner p { margin: 4px 0 0; color: #94a3b8; font-size: 13px; }
-    .btn-refresh { background: #ffffff; color: #0f172a; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; }
-    .btn-refresh:hover { background: #f1f5f9; }
+    /* Login */
+    .login-box { max-width: 400px; margin: clamp(32px, 12vh, 120px) auto; background: var(--surface); padding: var(--s-5); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow); }
+    .login-box .brand { margin-bottom: var(--s-4); }
+    .login-box h2 { font-size: 26px; }
+    .login-box > p, .login-box form + p { color: var(--muted); font-size: 14px; margin: 6px 0 var(--s-5); }
+    .error-msg { background: var(--danger-soft); color: var(--danger); border: 1px solid var(--danger-line); padding: 10px 12px; border-radius: var(--r-sm); font-size: 14px; margin-top: var(--s-3); }
 
-    /* Stat Cards */
-    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
-    @media (min-width: 768px) { .stats-grid { grid-template-columns: repeat(5, 1fr); gap: 12px; } }
-    .stat-card { background: white; border-radius: 12px; padding: 14px; border: 1px solid #e2e8f0; }
-    .stat-card h3 { margin: 0 0 4px; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
-    .stat-card .number { font-size: 22px; font-weight: 800; color: #0f172a; }
+    /* Loading */
+    #loadingOverlay { position: fixed; inset: 0; background: rgba(19,32,27,.55); backdrop-filter: blur(2px); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; color: #fff; font-weight: 600; gap: var(--s-3); }
+    .spinner { width: 38px; height: 38px; border: 4px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Tabs Bar */
-    .tabs-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    /* Top bar */
+    .topbar { background: var(--ink); color: #fff; border-radius: var(--r-lg); padding: var(--s-4) var(--s-5); display: flex; flex-direction: column; gap: var(--s-4); margin-bottom: var(--s-4); }
+    @media (min-width: 840px) { .topbar { flex-direction: row; align-items: center; justify-content: space-between; } }
+    .topbar-id { display: flex; align-items: center; gap: var(--s-3); }
+    .topbar h1 { font-size: 22px; }
+    #lastSyncNotice { font-size: 13px; color: #a9bbb3; margin-top: 2px; }
+    .topbar-actions { display: flex; gap: var(--s-2); flex-wrap: wrap; align-items: center; }
+    .maint { border-color: transparent; color: #fff; }
+    .maint.off { background: var(--accent); }
+    .maint.on { background: var(--danger); }
+    .maint::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #fff; }
 
-    /* Filter Toolbar Container */
-    .filter-card { background: white; border-radius: 12px; padding: 14px; margin-bottom: 16px; border: 1px solid #e2e8f0; }
-    .filter-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
-    @media (min-width: 768px) { .filter-grid { grid-template-columns: repeat(3, 1fr); align-items: flex-end; } }
-    @media (min-width: 1200px) { .filter-grid { grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr; } }
-    .filter-item { display: flex; flex-direction: column; gap: 4px; }
+    /* Tabs */
+    .tabs-bar { display: flex; gap: var(--s-1); margin-bottom: var(--s-4); border-bottom: 1px solid var(--line); overflow-x: auto; }
+    .tab { flex: none; padding: 10px var(--s-4); background: none; border: none; border-bottom: 3px solid transparent; margin-bottom: -1px; font: 600 14px var(--font-body); color: var(--muted); cursor: pointer; }
+    .tab:hover { color: var(--ink); }
+    .tab[aria-selected="true"] { color: var(--accent-strong); border-bottom-color: var(--accent); }
 
-    /* Responsive Table / Cards Switcher */
-    .table-card { background: white; border-radius: 12px; padding: 14px; border: 1px solid #e2e8f0; }
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s-3); margin-bottom: var(--s-4); }
+    @media (min-width: 768px) { .stats-grid { grid-template-columns: repeat(5, 1fr); } }
+    .stat { text-align: left; font: inherit; color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-3) var(--s-4); cursor: pointer; transition: border-color .15s; }
+    .stat:hover { border-color: var(--accent); }
+    .stat span { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 600; }
+    .stat span::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--dot, #9aa8a1); }
+    .stat .number { display: block; font: 700 28px var(--font-head); margin-top: 2px; }
+    .stat.pending { --dot: #e0841a; background: var(--warn-soft); border-color: var(--warn-line); }
+    .stat.approved { --dot: var(--accent); }
+    .stat.rejected { --dot: var(--danger); }
+    .stat.cancelled { --dot: #7c8a84; }
 
-    /* Desktop Table */
+    /* Cards & filters */
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: var(--s-4); box-shadow: var(--shadow); }
+    @media (min-width: 768px) { .card { padding: var(--s-5); } }
+    .filter-card { margin-bottom: var(--s-4); padding: var(--s-4); }
+    .filter-grid { display: grid; grid-template-columns: 1fr; gap: var(--s-3); }
+    @media (min-width: 640px) { .filter-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1000px) { .filter-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 1280px) { .filter-grid { grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr; } }
+    .filter-item label { margin-bottom: 4px; color: var(--muted); font-size: 12px; }
+    .view-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: var(--s-4); margin-bottom: var(--s-5); }
+    .view-head h3 { font-size: 22px; }
+    .view-head p { margin: 4px 0 0; color: var(--muted); font-size: 14px; max-width: 62ch; }
+    .view-tools { display: flex; gap: var(--s-3); align-items: flex-end; flex-wrap: wrap; }
+    .view-tools > div { min-width: 180px; }
+
+    /* Table + mobile cards */
     .desktop-table-wrapper { display: none; overflow-x: auto; }
     @media (min-width: 900px) { .desktop-table-wrapper { display: block; } }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; table-layout: fixed; }
-    th { padding: 12px 10px; font-weight: 700; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #f1f5f9; }
-    td { padding: 14px 10px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: top; word-break: break-word; }
-    tr:hover td { background: #f8fafc; }
-
-    /* Mobile Cards View */
-    .mobile-cards-container { display: flex; flex-direction: column; gap: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; table-layout: fixed; }
+    th { padding: 10px; font-weight: 600; color: var(--muted); font-size: 13px; border-bottom: 2px solid var(--line); }
+    td { padding: 14px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: top; overflow-wrap: anywhere; }
+    tbody tr:hover td { background: #f9fbfa; }
+    td small, .muted { color: var(--muted); font-size: 13px; }
+    .empty { text-align: center; padding: var(--s-6) var(--s-4); color: var(--muted); font-size: 14px; }
+    .mobile-cards-container { display: flex; flex-direction: column; gap: var(--s-3); }
     @media (min-width: 900px) { .mobile-cards-container { display: none; } }
-    .booking-card, .facility-item-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
-    .booking-card-header, .facility-card-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
-    .booking-card-body { font-size: 13px; color: var(--text-muted); display: grid; gap: 4px; }
-    .booking-card-body strong { color: var(--text-main); }
-    .booking-card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 8px; margin-top: 4px; }
+    .booking-card, .facility-item-card { border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-4); display: flex; flex-direction: column; gap: var(--s-3); }
+    .booking-card-header, .facility-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s-3); border-bottom: 1px solid var(--line-soft); padding-bottom: var(--s-3); }
+    .booking-card-body { font-size: 14px; display: grid; gap: 6px; }
+    .booking-card-body .k { color: var(--muted); }
 
-    /* Badges & Tags */
-    .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-    .badge.pending { background: #fff3cd; color: #856404; }
-    .badge.approved { background: #d4edda; color: #155724; }
-    .badge.rejected { background: #f8d7da; color: #721c24; }
-    .badge.cancelled { background: #e2e3e5; color: #383d41; }
+    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px; border-radius: 99px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .badge.pending { background: var(--warn-soft); color: var(--warn); }
+    .badge.approved { background: var(--accent-soft); color: var(--accent-strong); }
+    .badge.rejected { background: var(--danger-soft); color: var(--danger); }
+    .badge.cancelled { background: #eceff0; color: #46524d; }
+    .jkp-tag { display: inline-block; background: var(--line-soft); color: #33433c; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 6px; margin-top: 4px; }
+    .slot-row { border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--s-2) var(--s-3); margin-bottom: var(--s-2); background: #fbfcfb; }
+    .slot-row-top { display: flex; justify-content: space-between; align-items: center; gap: var(--s-2); margin-bottom: 6px; font-size: 13px; }
+    .slot-row-top strong { color: var(--accent-strong); font-variant-numeric: tabular-nums; }
+    .slot-note { display: block; margin-top: 4px; color: var(--danger); }
+    .action-select { height: 34px; padding: 0 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .facility-status-select { height: 38px; font-weight: 700; cursor: pointer; }
+    .facility-status-select.status-active { background: var(--accent-soft); color: var(--accent-strong); border-color: #bfe0d5; }
+    .facility-status-select.status-inactive { background: var(--danger-soft); color: var(--danger); border-color: var(--danger-line); }
 
-    .jkp-tag { display: inline-block; background: #e0f2fe; color: #0369a1; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-top: 4px; text-transform: uppercase; }
-    .action-select { width: 110px; height: 34px; padding: 0 6px; font-size: 12px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: 600; cursor: pointer; }
-
-    .back-button { border: none; background: transparent; padding: 0; margin-bottom: 16px; color: #2563eb; font-size: 13px; font-weight: 600; cursor: pointer; }
+    /* Backdoor + slots */
+    .narrow { max-width: 900px; margin: 0 auto; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); }
+    @media (max-width: 560px) { .two-col { grid-template-columns: 1fr; } }
+    #bdStep2 { margin-top: var(--s-5); border-top: 1px solid var(--line); padding-top: var(--s-5); }
+    .back-button { border: none; background: none; padding: 0; margin-bottom: var(--s-4); color: var(--accent-strong); font: 600 14px var(--font-body); cursor: pointer; }
     .back-button:hover { text-decoration: underline; }
+    .day-box { background: #fbfcfb; border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-3) var(--s-4); margin-bottom: var(--s-3); }
+    .day-title { font: 600 15px var(--font-head); margin-bottom: var(--s-3); }
+    .slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 6px; }
+    .slot { border: 1px solid #c4cfc9; background: #fff; color: var(--ink); border-radius: var(--r-sm); padding: 9px 4px; min-height: 40px; font: 500 13px var(--font-body); font-variant-numeric: tabular-nums; cursor: pointer; }
+    .slot:hover { border-color: var(--accent); background: var(--accent-soft); }
+    .slot.selected { border-color: var(--accent); background: var(--accent); color: #fff; font-weight: 700; }
+    .bd-summary { position: sticky; bottom: var(--s-3); background: var(--ink); color: #fff; padding: var(--s-3) var(--s-4); border-radius: var(--r-md); font-size: 14px; margin-bottom: var(--s-4); }
+    #bdDetailsForm { display: grid; gap: var(--s-4); border-top: 1px solid var(--line); padding-top: var(--s-4); }
+    #bdDetailsForm .form-group { margin: 0; }
 
-    /* Colored Facility Status Dropdowns */
-    .facility-status-select {
-      width: 100%;
-      height: 38px;
-      padding: 0 8px;
-      font-size: 13px;
-      border-radius: 6px;
-      font-weight: 700;
-      cursor: pointer;
-      border: 1px solid #cbd5e1;
-    }
-    .facility-status-select.status-active { background: #d4edda; color: #155724; border-color: #c3e6cb; }
-    .facility-status-select.status-inactive { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+    /* Toast */
+    #toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); max-width: min(92vw, 480px); background: var(--ink); color: #fff; padding: 12px 18px; border-radius: var(--r-md); font-size: 14px; box-shadow: 0 12px 32px -8px rgba(0,0,0,.4); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 10000; }
+    #toast.show { opacity: 1; transform: translate(-50%, 0); }
+    #toast.error { background: var(--danger); }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
   </style>
 </head>
 <body>
 
-  <!-- GLOBAL LOADING OVERLAY -->
-  <div id="loadingOverlay" class="hidden">
+  <div id="loadingOverlay" class="hidden" role="status" aria-live="polite">
     <div class="spinner"></div>
-    <div id="loadingText">Processing request...</div>
+    <div id="loadingText">Processing request…</div>
   </div>
 
-  <!-- LOGIN VIEW -->
+  <!-- LOGIN -->
   <div id="loginView">
     <div class="login-box">
-      <h2>KK5 Admin Portal</h2>
-      <p>Enter administrator credentials to manage facility reservations.</p>
+      <div class="brand" aria-hidden="true">KK5</div>
+      <h2>Admin sign in</h2>
+      <p>Manage facility bookings and availability.</p>
       <form id="loginForm">
         <div class="form-group">
           <label for="username">Username</label>
@@ -142,243 +184,189 @@
           <label for="password">Password</label>
           <input type="password" id="password" required autocomplete="current-password">
         </div>
-        <button type="submit" id="loginBtn" class="btn-login">Sign In</button>
-        <div id="loginError" class="error-msg hidden"></div>
+        <button type="submit" id="loginBtn" class="btn btn-primary btn-block" style="height:44px">Sign in</button>
+        <div id="loginError" class="error-msg hidden" role="alert"></div>
       </form>
     </div>
   </div>
 
-  <!-- DASHBOARD VIEW -->
+  <!-- DASHBOARD -->
   <div id="dashboardView" class="container hidden">
-    <!-- Hero Banner -->
-    <div class="hero-banner">
-      <div>
-        <h1>KK5 Admin Dashboard</h1>
-        <p>Manage facility booking requests &amp; facility statuses.</p>
-        <div id="lastSyncNotice" style="font-size: 12px; color: #38bdf8; margin-top: 6px;">Last synced: Never</div>
-      </div>
-      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-        <button type="button" id="maintenanceToggleBtn" class="btn-refresh" style="background:#22c55e; color:white;" onclick="toggleMaintenanceMode()">🟢 Maintenance: OFF</button>
-        <button type="button" class="btn-refresh" onclick="refreshAllData()">🔄 Refresh Data</button>
-        <button type="button" class="btn-refresh" style="background:#ef4444; color:white;" onclick="logoutAdmin()">Sign Out</button>
-      </div>
-    </div>
-
-    <!-- Navigation Tabs -->
-    <div class="tabs-bar">
-      <button type="button" id="tabBookingsBtn" class="btn-refresh" style="background:#0f172a; color:white;" onclick="switchTab('bookings')">📅 Manage Bookings</button>
-      <button type="button" id="tabFacilitiesBtn" class="btn-refresh" onclick="switchTab('facilities')">🏢 Manage Facilities</button>
-      <button type="button" id="tabBackdoorBtn" class="btn-refresh" onclick="switchTab('backdoor')">⚡ Admin Backdoor Booking</button>
-      <button type="button" id="tabReportBtn" class="btn-refresh" onclick="switchTab('report')">📊 Daily Report Export</button>
-    </div>
-
-    <!-- Stat Summary Cards -->
-    <div id="statsSection" class="stats-grid">
-      <div class="stat-card"><h3>TOTAL</h3><div id="statTotal" class="number">0</div></div>
-      <div class="stat-card"><h3>PENDING</h3><div id="statPending" class="number">0</div></div>
-      <div class="stat-card"><h3>APPROVED</h3><div id="statApproved" class="number">0</div></div>
-      <div class="stat-card"><h3>REJECTED</h3><div id="statRejected" class="number">0</div></div>
-      <div class="stat-card"><h3>CANCELLED</h3><div id="statCancelled" class="number">0</div></div>
-    </div>
-
-    <!-- Filter & Search Toolbar (Bookings) -->
-    <div id="filterSection" class="filter-card">
-      <div class="filter-grid">
-        <div class="filter-item">
-          <label>SEARCH</label>
-          <input type="text" id="searchInput" placeholder="Booking ID, name, matric..." oninput="renderBookings()">
-        </div>
-        <div class="filter-item">
-          <label>STATUS</label>
-          <select id="statusFilter" onchange="renderBookings()">
-            <option value="ALL">All statuses</option>
-            <option value="PENDING">Pending</option>
-            <option value="APPROVED">Approved</option>
-            <option value="REJECTED">Rejected</option>
-            <option value="CANCELLED">Cancelled</option>
-          </select>
-        </div>
-        <div class="filter-item">
-          <label>FACILITY</label>
-          <select id="facilityFilter" onchange="renderBookings()">
-            <option value="ALL">All facilities</option>
-          </select>
-        </div>
-        <div class="filter-item">
-          <label>JKP IN CHARGE</label>
-          <select id="jkpFilter" onchange="renderBookings()">
-            <option value="ALL">All JKP</option>
-          </select>
-        </div>
-        <div class="filter-item">
-          <label>DATE</label>
-          <input type="date" id="dateFilter" onchange="renderBookings()">
-        </div>
-        <div class="filter-item">
-          <label>SORT</label>
-          <select id="sortSelect" onchange="renderBookings()">
-            <option value="newest">Latest booking</option>
-            <option value="oldest">Oldest booking</option>
-            <option value="date_asc">Event Date (Soonest)</option>
-            <option value="status">Status Priority</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- BOOKINGS VIEW CONTAINER -->
-    <div id="bookingsViewContainer" class="table-card">
-      <div class="desktop-table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 15%;">BOOKING</th>
-              <th style="width: 15%;">FACILITY</th>
-              <th style="width: 28%;">SLOT STATUS &amp; TIMES</th>
-              <th style="width: 16%;">BOOKER</th>
-              <th style="width: 16%;">PURPOSE</th>
-              <th style="width: 10%;">SUMMARY EMAIL</th>
-            </tr>
-          </thead>
-          <tbody id="desktopTableBody">
-            <tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">Loading bookings...</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div id="mobileCardsContainer" class="mobile-cards-container">
-        <div style="text-align:center; padding:30px; color:#64748b; font-size:13px;">Loading bookings...</div>
-      </div>
-    </div>
-
-    <!-- FACILITIES MANAGEMENT VIEW -->
-    <div id="facilitiesManagementView" class="table-card hidden">
-      <div style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
+    <header class="topbar">
+      <div class="topbar-id">
+        <div class="brand" aria-hidden="true">KK5</div>
         <div>
-          <h3 style="margin:0 0 4px; font-size:16px; color:#0f172a;">Facility Availability &amp; Closure Notices</h3>
-          <p style="font-size:13px; color:#64748b; margin:0;">Toggle facilities active/inactive and provide reasons for maintenance or closures.</p>
-        </div>
-        <div style="width: 220px;">
-          <label for="facilitySortSelect" style="margin-bottom:2px;">SORT FACILITIES</label>
-          <select id="facilitySortSelect" class="action-select" style="width: 100%; height: 38px;" onchange="renderFacilities()">
-            <option value="name_asc">Name (A - Z)</option>
-            <option value="name_desc">Name (Z - A)</option>
-            <option value="status_active">Status (Active First)</option>
-            <option value="status_inactive">Status (Inactive First)</option>
-            <option value="jkp">JKP in Charge</option>
-          </select>
+          <h1>Admin dashboard</h1>
+          <div id="lastSyncNotice">Last synced: never</div>
         </div>
       </div>
+      <div class="topbar-actions">
+        <button type="button" id="maintenanceToggleBtn" class="btn btn-sm maint off" onclick="toggleMaintenanceMode()">Maintenance: off</button>
+        <button type="button" class="btn btn-sm btn-ghost" onclick="refreshAllData()">Refresh</button>
+        <button type="button" class="btn btn-sm btn-ghost" onclick="logoutAdmin()">Sign out</button>
+      </div>
+    </header>
 
-      <div class="desktop-table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 25%;">FACILITY NAME</th>
-              <th style="width: 15%;">JKP IN CHARGE</th>
-              <th style="width: 20%;">STATUS</th>
-              <th style="width: 30%;">CLOSURE REASON / NOTICE</th>
-              <th style="width: 10%;">ACTION</th>
-            </tr>
-          </thead>
-          <tbody id="facilitiesTableBody">
-            <tr><td colspan="5" style="text-align:center; padding:30px; color:#64748b;">Loading facilities...</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div id="mobileFacilitiesContainer" class="mobile-cards-container">
-        <div style="text-align:center; padding:30px; color:#64748b; font-size:13px;">Loading facilities...</div>
+    <nav class="tabs-bar" role="tablist" aria-label="Dashboard sections">
+      <button type="button" role="tab" id="tabBookingsBtn" class="tab" aria-selected="true" onclick="switchTab('bookings')">Bookings</button>
+      <button type="button" role="tab" id="tabFacilitiesBtn" class="tab" aria-selected="false" onclick="switchTab('facilities')">Facilities</button>
+      <button type="button" role="tab" id="tabBackdoorBtn" class="tab" aria-selected="false" onclick="switchTab('backdoor')">Book for someone</button>
+      <button type="button" role="tab" id="tabReportBtn" class="tab" aria-selected="false" onclick="switchTab('report')">Daily report</button>
+    </nav>
+
+    <div id="statsSection" class="stats-grid">
+      <button type="button" class="stat" onclick="filterByStatus('ALL')" title="Show all bookings"><span>Total</span><b id="statTotal" class="number">0</b></button>
+      <button type="button" class="stat pending" onclick="filterByStatus('PENDING')" title="Show pending bookings"><span>Pending</span><b id="statPending" class="number">0</b></button>
+      <button type="button" class="stat approved" onclick="filterByStatus('APPROVED')" title="Show approved bookings"><span>Approved</span><b id="statApproved" class="number">0</b></button>
+      <button type="button" class="stat rejected" onclick="filterByStatus('REJECTED')" title="Show rejected bookings"><span>Rejected</span><b id="statRejected" class="number">0</b></button>
+      <button type="button" class="stat cancelled" onclick="filterByStatus('CANCELLED')" title="Show cancelled bookings"><span>Cancelled</span><b id="statCancelled" class="number">0</b></button>
+    </div>
+
+    <div id="filterSection" class="card filter-card">
+      <div class="filter-grid">
+        <div class="filter-item"><label for="searchInput">Search</label><input type="search" id="searchInput" placeholder="Booking ID, name, matric…" oninput="renderBookings()"></div>
+        <div class="filter-item"><label for="statusFilter">Status</label>
+          <select id="statusFilter" onchange="renderBookings()">
+            <option value="ALL">All statuses</option><option value="PENDING">Pending</option><option value="APPROVED">Approved</option><option value="REJECTED">Rejected</option><option value="CANCELLED">Cancelled</option>
+          </select></div>
+        <div class="filter-item"><label for="facilityFilter">Facility</label><select id="facilityFilter" onchange="renderBookings()"><option value="ALL">All facilities</option></select></div>
+        <div class="filter-item"><label for="jkpFilter">JKP in charge</label><select id="jkpFilter" onchange="renderBookings()"><option value="ALL">All JKP</option></select></div>
+        <div class="filter-item"><label for="dateFilter">Date</label><input type="date" id="dateFilter" onchange="renderBookings()"></div>
+        <div class="filter-item"><label for="sortSelect">Sort by</label>
+          <select id="sortSelect" onchange="renderBookings()">
+            <option value="newest">Latest booking</option><option value="oldest">Oldest booking</option><option value="date_asc">Event date (soonest)</option><option value="status">Status priority</option>
+          </select></div>
       </div>
     </div>
 
-    <!-- ADMIN BACKDOOR BOOKING VIEW (INTERACTIVE SLOT SELECTOR) -->
-    <div id="backdoorBookingView" class="table-card hidden" style="max-width: 900px; margin: 0 auto;">
-      <h3 style="margin:0 0 6px; font-size:18px; color:#0f172a;">⚡ Admin Backdoor Booking</h3>
-      <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Book on behalf of anyone with an interactive slot selector. Bypasses all restrictions: allows booking unavailable/inactive facilities, same-day bookings, unlimited hours per day, and arbitrary date ranges.</p>
+    <!-- BOOKINGS -->
+    <div id="bookingsViewContainer" class="card">
+      <div class="desktop-table-wrapper">
+        <table>
+          <thead><tr>
+            <th style="width:14%">Booking</th><th style="width:14%">Facility</th><th style="width:30%">Slots &amp; status</th><th style="width:16%">Booker</th><th style="width:16%">Purpose</th><th style="width:10%">Email</th>
+          </tr></thead>
+          <tbody id="desktopTableBody"><tr><td colspan="6" class="empty">Loading bookings…</td></tr></tbody>
+        </table>
+      </div>
+      <div id="mobileCardsContainer" class="mobile-cards-container"><div class="empty">Loading bookings…</div></div>
+    </div>
 
-      <!-- Step 1: Select Facility & Dates -->
+    <!-- FACILITIES -->
+    <div id="facilitiesManagementView" class="card hidden">
+      <div class="view-head">
+        <div>
+          <h3>Facility availability</h3>
+          <p>Switch facilities on or off and add a closure notice that users will see.</p>
+        </div>
+        <div class="view-tools"><div>
+          <label for="facilitySortSelect">Sort facilities</label>
+          <select id="facilitySortSelect" onchange="renderFacilities()">
+            <option value="name_asc">Name (A–Z)</option><option value="name_desc">Name (Z–A)</option><option value="status_active">Active first</option><option value="status_inactive">Inactive first</option><option value="jkp">JKP in charge</option>
+          </select>
+        </div></div>
+      </div>
+      <div class="desktop-table-wrapper">
+        <table>
+          <thead><tr>
+            <th style="width:25%">Facility</th><th style="width:15%">JKP in charge</th><th style="width:20%">Status</th><th style="width:28%">Closure notice</th><th style="width:12%"></th>
+          </tr></thead>
+          <tbody id="facilitiesTableBody"><tr><td colspan="5" class="empty">Loading facilities…</td></tr></tbody>
+        </table>
+      </div>
+      <div id="mobileFacilitiesContainer" class="mobile-cards-container"><div class="empty">Loading facilities…</div></div>
+    </div>
+
+    <!-- BOOK FOR SOMEONE -->
+    <div id="backdoorBookingView" class="card narrow hidden">
+      <div class="view-head" style="margin-bottom:var(--s-4)">
+        <div>
+          <h3>Book for someone</h3>
+          <p>Creates an approved booking on someone’s behalf. It skips the usual limits: inactive facilities, same-day bookings, unlimited hours and any date range.</p>
+        </div>
+      </div>
+
       <div id="bdStep1">
         <div class="form-group">
-          <label for="bdFacilitySelect">Select Facility</label>
-          <select id="bdFacilitySelect" class="action-select" style="width:100%; height:42px;">
-            <option value="">-- Choose facility --</option>
-          </select>
+          <label for="bdFacilitySelect">Facility</label>
+          <select id="bdFacilitySelect"><option value="">Choose a facility</option></select>
         </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:16px;">
-          <div class="form-group" style="margin-bottom:0;">
-            <label for="bdStartDate">Start Date</label>
-            <input type="date" id="bdStartDate">
-          </div>
-          <div class="form-group" style="margin-bottom:0;">
-            <label for="bdEndDate">End Date</label>
-            <input type="date" id="bdEndDate">
-          </div>
+        <div class="two-col" style="margin-bottom:var(--s-4)">
+          <div><label for="bdStartDate">Start date</label><input type="date" id="bdStartDate"></div>
+          <div><label for="bdEndDate">End date</label><input type="date" id="bdEndDate"></div>
         </div>
-
-        <button type="button" class="btn-refresh" style="background:#0f172a; color:white; width:100%; height:42px;" onclick="loadBackdoorAvailability()">Load Interactive Slots Matrix</button>
+        <button type="button" class="btn btn-primary btn-block" style="height:44px" onclick="loadBackdoorAvailability()">Show time slots</button>
       </div>
 
-      <!-- Step 2: Interactive Slot Selection & Booker Details -->
-      <div id="bdStep2" class="hidden" style="margin-top:20px; border-top:1px solid #e2e8f0; padding-top:20px;">
-        <button type="button" class="back-button" onclick="backToBdStep1()">← Change Facility / Dates</button>
-        <h4 id="bdSelectedFacilityTitle" style="margin:0 0 10px; color:#0f172a;"></h4>
+      <div id="bdStep2" class="hidden">
+        <button type="button" class="back-button" onclick="backToBdStep1()">← Change facility or dates</button>
+        <h4 id="bdSelectedFacilityTitle" style="font-size:18px;margin-bottom:var(--s-3)"></h4>
+        <div id="bdAvailabilityContainer" style="margin-bottom:var(--s-4)"></div>
+        <div id="bdSummary" class="bd-summary" aria-live="polite">No time selected</div>
 
-        <div id="bdAvailabilityContainer" style="margin-bottom:20px;"></div>
-
-        <form id="bdDetailsForm" style="display:grid; gap:14px; border-top:1px solid #e2e8f0; padding-top:16px;">
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-            <div class="form-group" style="margin-bottom:0;"><label for="bdName">Booker Name</label><input type="text" id="bdName" required placeholder="Full Name"></div>
-            <div class="form-group" style="margin-bottom:0;"><label for="bdMatric">Matric Number</label><input type="text" id="bdMatric" required placeholder="e.g. 24001958"></div>
+        <form id="bdDetailsForm">
+          <div class="two-col">
+            <div class="form-group"><label for="bdName">Booker name</label><input type="text" id="bdName" required placeholder="Full name"></div>
+            <div class="form-group"><label for="bdMatric">Matric number</label><input type="text" id="bdMatric" required placeholder="e.g. 24001958"></div>
           </div>
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-            <div class="form-group" style="margin-bottom:0;"><label for="bdEmail">Email</label><input type="email" id="bdEmail" required placeholder="user@siswa.um.edu.my"></div>
-            <div class="form-group" style="margin-bottom:0;"><label for="bdPhone">Phone Number</label><input type="tel" id="bdPhone" required placeholder="0104563287"></div>
+          <div class="two-col">
+            <div class="form-group"><label for="bdEmail">Email</label><input type="email" id="bdEmail" required placeholder="user@siswa.um.edu.my"></div>
+            <div class="form-group"><label for="bdPhone">Phone number</label><input type="tel" id="bdPhone" required placeholder="0104563287"></div>
           </div>
-          <div class="form-group" style="margin-bottom:0;"><label for="bdOrg">Organisation / Bureau</label><input type="text" id="bdOrg" required placeholder="e.g. JTK"></div>
-          <div class="form-group" style="margin-bottom:0;"><label for="bdPurpose">Purpose / Usage</label><textarea id="bdPurpose" required placeholder="Purpose of booking..."></textarea></div>
-
-          <button type="submit" class="btn-refresh" style="background:#22c55e; color:white; width:100%; height:46px; font-size:15px; margin-top:10px;">Submit Approved Booking (Backdoor)</button>
+          <div class="form-group"><label for="bdOrg">Organisation / bureau</label><input type="text" id="bdOrg" required placeholder="e.g. JTK"></div>
+          <div class="form-group"><label for="bdPurpose">Purpose</label><textarea id="bdPurpose" required placeholder="What is the facility for?"></textarea></div>
+          <button type="submit" class="btn btn-primary btn-block" style="height:46px;font-size:15px">Create approved booking</button>
         </form>
       </div>
     </div>
 
-    <!-- DAILY REPORT EXPORT VIEW -->
-    <div id="dailyReportView" class="table-card hidden">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+    <!-- DAILY REPORT -->
+    <div id="dailyReportView" class="card hidden">
+      <div class="view-head">
         <div>
-          <h3 style="margin:0 0 4px; font-size:18px; color:#0f172a;">📊 Daily Booking Report</h3>
-          <p style="font-size:13px; color:#64748b; margin:0;">View all approved facility bookings scheduled for a specific date.</p>
+          <h3>Daily booking report</h3>
+          <p>All approved bookings for one date.</p>
         </div>
-        <div style="display:flex; gap:10px; align-items:flex-end;">
-          <div>
-            <label for="reportDateInput" style="margin-bottom:2px;">Select Date</label>
-            <input type="date" id="reportDateInput" style="height:38px;">
-          </div>
-          <button type="button" class="btn-refresh" style="background:#0f172a; color:white; height:38px; padding:0 16px;" onclick="fetchDailyReport()">Generate Report</button>
+        <div class="view-tools">
+          <div><label for="reportDateInput">Date</label><input type="date" id="reportDateInput"></div>
+          <button type="button" class="btn btn-primary" onclick="fetchDailyReport()">Generate report</button>
         </div>
       </div>
-
-      <div class="desktop-table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 15%;">BOOKING ID</th>
-              <th style="width: 20%;">FACILITY</th>
-              <th style="width: 15%;">TIME SLOT</th>
-              <th style="width: 20%;">BOOKER</th>
-              <th style="width: 15%;">ORGANISATION</th>
-              <th style="width: 15%;">PURPOSE</th>
-            </tr>
-          </thead>
-          <tbody id="reportTableBody">
-            <tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">Select a date and click Generate Report.</td></tr>
-          </tbody>
+      <div class="desktop-table-wrapper" style="display:block">
+        <table style="min-width:720px">
+          <thead><tr>
+            <th style="width:15%">Booking ID</th><th style="width:20%">Facility</th><th style="width:15%">Time</th><th style="width:20%">Booker</th><th style="width:15%">Organisation</th><th style="width:15%">Purpose</th>
+          </tr></thead>
+          <tbody id="reportTableBody"><tr><td colspan="6" class="empty">Pick a date, then generate the report.</td></tr></tbody>
         </table>
       </div>
     </div>
   </div>
 
+  <div id="toast" role="status" aria-live="polite"></div>
+
   <script>
+    const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+    let toastTimer;
+    function toast(msg) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.toggle("error", /fail|error|required|cannot|please/i.test(msg));
+      el.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove("show"), 4500);
+    }
+
+    document.addEventListener("click", e => {
+      const b = e.target.closest("[data-email-id]");
+      if (b) sendSummaryEmail(b.dataset.emailId);
+    });
+    document.addEventListener("change", e => {
+      const s = e.target.closest(".slot-status-select");
+      if (s) updateSlotStatus(Number(s.dataset.row), s.dataset.bid, s.value);
+    });
+
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxRV6Oj4qyHsgyNq2gmsmAWXO2_1c0fBNRgs6JBiSU3Qv6F0afe9KafwxzrAajJHD9m/exec";
 
     let currentAdmin = { username: "", password: "" };
@@ -391,7 +379,7 @@
     let bdSelectedFacilityObj = null;
     let bdSelectedSlotsByDate = {};
 
-    function showLoading(text = "Processing request...") {
+    function showLoading(text = "Processing request…") {
       document.getElementById("loadingText").textContent = text;
       document.getElementById("loadingOverlay").classList.remove("hidden");
     }
@@ -404,7 +392,7 @@
       const now = new Date();
       const timeString = now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
       const dateString = now.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
-      document.getElementById("lastSyncNotice").textContent = `Last synced: ${dateString} at ${timeString}`;
+      document.getElementById("lastSyncNotice").textContent = `Last synced ${dateString}, ${timeString}`;
     }
 
     function parseLocalDateInput(dateStr) {
@@ -440,7 +428,7 @@
       const loginBtn = document.getElementById("loginBtn");
 
       loginBtn.disabled = true;
-      loginBtn.textContent = "Verifying...";
+      loginBtn.textContent = "Signing in…";
       errorDiv.classList.add("hidden");
       showLoading("Warming up server & loading data...");
 
@@ -462,7 +450,7 @@
       } finally {
         hideLoading();
         loginBtn.disabled = false;
-        loginBtn.textContent = "Sign In";
+        loginBtn.textContent = "Sign in";
       }
     });
 
@@ -479,15 +467,9 @@
     function updateMaintenanceButtonUI() {
       const btn = document.getElementById("maintenanceToggleBtn");
       if (!btn) return;
-      if (currentMaintenanceState) {
-        btn.style.background = "#ef4444";
-        btn.style.color = "white";
-        btn.textContent = "🔴 Maintenance: ON";
-      } else {
-        btn.style.background = "#22c55e";
-        btn.style.color = "white";
-        btn.textContent = "🟢 Maintenance: OFF";
-      }
+      btn.classList.toggle("on", currentMaintenanceState);
+      btn.classList.toggle("off", !currentMaintenanceState);
+      btn.textContent = currentMaintenanceState ? "Maintenance: on" : "Maintenance: off";
     }
 
     async function toggleMaintenanceMode() {
@@ -508,16 +490,16 @@
 
         currentMaintenanceState = newState;
         updateMaintenanceButtonUI();
-        alert(newState ? "Maintenance mode enabled successfully." : "Maintenance mode disabled.");
+        toast(newState ? "Maintenance mode enabled successfully." : "Maintenance mode disabled.");
       } catch (err) {
-        alert("Failed to update maintenance mode: " + err.message);
+        toast("Failed to update maintenance mode: " + err.message);
       } finally {
         hideLoading();
       }
     }
 
     async function fetchAllData() {
-      showLoading("Syncing dashboard data...");
+      showLoading("Syncing dashboard data…");
       try {
         const [dashRes, facRes] = await Promise.all([
           callApiWithRetry({ action: "getDashboard", username: currentAdmin.username, password: currentAdmin.password }),
@@ -540,7 +522,7 @@
         if (activeTab === 'bookings') renderBookings();
         else if (activeTab === 'facilities') renderFacilities();
       } catch (err) {
-        alert("Error syncing data: " + err.message);
+        toast("Error syncing data: " + err.message);
       } finally {
         hideLoading();
       }
@@ -549,59 +531,36 @@
     async function refreshAllData() {
       await checkMaintenanceStatus();
       await fetchAllData();
-      alert("Data refreshed successfully!");
+      toast("Data refreshed.");
     }
 
     function switchTab(tabName) {
       activeTab = tabName;
-      const bookingsView = document.getElementById("bookingsViewContainer");
-      const facilitiesView = document.getElementById("facilitiesManagementView");
-      const backdoorView = document.getElementById("backdoorBookingView");
-      const reportView = document.getElementById("dailyReportView");
+      const views = { bookings: "bookingsViewContainer", facilities: "facilitiesManagementView", backdoor: "backdoorBookingView", report: "dailyReportView" };
+      const tabs = { bookings: "tabBookingsBtn", facilities: "tabFacilitiesBtn", backdoor: "tabBackdoorBtn", report: "tabReportBtn" };
+      Object.keys(views).forEach(k => {
+        document.getElementById(views[k]).classList.toggle("hidden", k !== tabName);
+        document.getElementById(tabs[k]).setAttribute("aria-selected", String(k === tabName));
+      });
+      const isBookings = tabName === "bookings";
+      document.getElementById("statsSection").style.display = isBookings ? "grid" : "none";
+      document.getElementById("filterSection").style.display = isBookings ? "block" : "none";
+      if (isBookings) renderBookings();
+      if (tabName === "facilities") renderFacilities();
+    }
 
-      const statsSection = document.getElementById("statsSection");
-      const filterSection = document.getElementById("filterSection");
-
-      const btnBookings = document.getElementById("tabBookingsBtn");
-      const btnFacilities = document.getElementById("tabFacilitiesBtn");
-      const btnBackdoor = document.getElementById("tabBackdoorBtn");
-      const btnReport = document.getElementById("tabReportBtn");
-
-      [bookingsView, facilitiesView, backdoorView, reportView].forEach(v => v.classList.add("hidden"));
-      [btnBookings, btnFacilities, btnBackdoor, btnReport].forEach(b => { b.style.background = "#ffffff"; b.style.color = "#0f172a"; });
-
-      if (tabName === 'bookings') {
-        statsSection.style.display = 'grid';
-        filterSection.style.display = 'block';
-        bookingsView.classList.remove('hidden');
-        btnBookings.style.background = '#0f172a'; btnBookings.style.color = 'white';
-        renderBookings();
-      } else if (tabName === 'facilities') {
-        statsSection.style.display = 'none';
-        filterSection.style.display = 'none';
-        facilitiesView.classList.remove('hidden');
-        btnFacilities.style.background = '#0f172a'; btnFacilities.style.color = 'white';
-        renderFacilities();
-      } else if (tabName === 'backdoor') {
-        statsSection.style.display = 'none';
-        filterSection.style.display = 'none';
-        backdoorView.classList.remove('hidden');
-        btnBackdoor.style.background = '#0f172a'; btnBackdoor.style.color = 'white';
-      } else if (tabName === 'report') {
-        statsSection.style.display = 'none';
-        filterSection.style.display = 'none';
-        reportView.classList.remove('hidden');
-        btnReport.style.background = '#0f172a'; btnReport.style.color = 'white';
-      }
+    function filterByStatus(status) {
+      document.getElementById("statusFilter").value = status;
+      renderBookings();
     }
 
     function populateBackdoorFacilityDropdown() {
       const select = document.getElementById("bdFacilitySelect");
       if (!select) return;
-      select.innerHTML = '<option value="">-- Choose facility --</option>';
+      select.innerHTML = '<option value="">Choose a facility</option>';
       cachedFacilities.forEach(f => {
-        const inactiveLabel = f.status !== "ACTIVE" ? " (Currently Unavailable/Inactive)" : "";
-        select.innerHTML += `<option value="${f.name}">${f.name}${inactiveLabel}</option>`;
+        const label = f.status !== "ACTIVE" ? " (inactive)" : "";
+        select.innerHTML += `<option value="${esc(f.name)}">${esc(f.name)}${label}</option>`;
       });
     }
 
@@ -610,85 +569,67 @@
       document.getElementById("bdStep1").classList.remove("hidden");
     }
 
+    function updateBdSummary() {
+      let n = 0;
+      Object.values(bdSelectedSlotsByDate).forEach(a => n += a.length);
+      document.getElementById("bdSummary").textContent = n === 0 ? "No time selected" : n + (n === 1 ? " slot" : " slots") + " selected · " + (n / 2) + (n === 2 ? " hour" : " hours");
+    }
+
     async function loadBackdoorAvailability() {
       const facilityName = document.getElementById("bdFacilitySelect").value;
       const startStr = document.getElementById("bdStartDate").value;
       const endStr = document.getElementById("bdEndDate").value;
 
-      if (!facilityName || !startStr || !endStr) {
-        alert("Please select a facility, start date, and end date.");
-        return;
-      }
-
-      if (endStr < startStr) {
-        alert("End date cannot be earlier than start date.");
-        return;
-      }
+      if (!facilityName || !startStr || !endStr) { toast("Please select a facility, start date and end date."); return; }
+      if (endStr < startStr) { toast("End date cannot be earlier than start date."); return; }
 
       bdSelectedFacilityObj = cachedFacilities.find(f => f.name === facilityName);
-      if (!bdSelectedFacilityObj) {
-        alert("Facility details not found.");
-        return;
-      }
+      if (!bdSelectedFacilityObj) { toast("Facility details not found."); return; }
 
-      const hoursDisplay = (bdSelectedFacilityObj.opening && bdSelectedFacilityObj.closing) ? ` (${bdSelectedFacilityObj.opening} - ${bdSelectedFacilityObj.closing})` : "";
-      document.getElementById("bdSelectedFacilityTitle").textContent = `Facility: ${facilityName}${hoursDisplay}`;
+      const hoursDisplay = (bdSelectedFacilityObj.opening && bdSelectedFacilityObj.closing) ? ` · ${bdSelectedFacilityObj.opening} – ${bdSelectedFacilityObj.closing}` : "";
+      document.getElementById("bdSelectedFacilityTitle").textContent = facilityName + hoursDisplay;
       document.getElementById("bdStep1").classList.add("hidden");
       document.getElementById("bdStep2").classList.remove("hidden");
 
       const container = document.getElementById("bdAvailabilityContainer");
-      container.innerHTML = "<div style='color:#64748b;'>Loading slot availability...</div>";
-
       bdSelectedSlotsByDate = {};
+      updateBdSummary();
 
       try {
         const dates = getDatesBetweenLocal(parseLocalDateInput(startStr), parseLocalDateInput(endStr));
         container.innerHTML = "";
-
         const openMin = parseTimeToMinutesLocal(bdSelectedFacilityObj.opening || "08:00");
         const closeMin = parseTimeToMinutesLocal(bdSelectedFacilityObj.closing || "23:00");
         const SLOT_INTERVAL = 30;
 
         dates.forEach(dateObj => {
-          const yyyy = dateObj.getFullYear();
-          const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
-          const dd = String(dateObj.getDate()).padStart(2, '0');
-          const dateKey = `${yyyy}-${mm}-${dd}`;
-
+          const dateKey = dateObj.getFullYear() + "-" + String(dateObj.getMonth() + 1).padStart(2, "0") + "-" + String(dateObj.getDate()).padStart(2, "0");
           const dayBox = document.createElement("div");
-          dayBox.style.cssText = "background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:10px;";
-
+          dayBox.className = "day-box";
           const dayTitle = document.createElement("div");
-          dayTitle.style.cssText = "font-weight:700; font-size:13px; margin-bottom:8px; color:#334155;";
+          dayTitle.className = "day-title";
           dayTitle.textContent = dateObj.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
           dayBox.appendChild(dayTitle);
-
           const grid = document.createElement("div");
-          grid.style.cssText = "display:grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap:6px;";
+          grid.className = "slot-grid";
 
           for (let m = openMin; m + SLOT_INTERVAL <= closeMin; m += SLOT_INTERVAL) {
             const slotStart = minutesToTimeStrLocal(m);
             const slotEnd = minutesToTimeStrLocal(m + SLOT_INTERVAL);
-
             const btn = document.createElement("button");
             btn.type = "button";
-            btn.textContent = `${slotStart} - ${slotEnd}`;
-            btn.style.cssText = "border:1px solid #cbd5e1; background:white; border-radius:6px; padding:6px 4px; text-align:center; font-size:11px; cursor:pointer;";
-
+            btn.className = "slot";
+            btn.textContent = slotStart + " – " + slotEnd;
+            btn.setAttribute("aria-pressed", "false");
             btn.onclick = () => {
               if (!bdSelectedSlotsByDate[dateKey]) bdSelectedSlotsByDate[dateKey] = [];
               const idx = bdSelectedSlotsByDate[dateKey].findIndex(s => s.start === slotStart);
-              if (idx > -1) {
-                bdSelectedSlotsByDate[dateKey].splice(idx, 1);
-                btn.style.background = "white";
-                btn.style.color = "#0f172a";
-                btn.style.borderColor = "#cbd5e1";
-              } else {
-                bdSelectedSlotsByDate[dateKey].push({ start: slotStart, end: slotEnd });
-                btn.style.background = "#2563eb";
-                btn.style.color = "white";
-                btn.style.borderColor = "#2563eb";
-              }
+              if (idx > -1) bdSelectedSlotsByDate[dateKey].splice(idx, 1);
+              else bdSelectedSlotsByDate[dateKey].push({ start: slotStart, end: slotEnd });
+              const on = idx === -1;
+              btn.classList.toggle("selected", on);
+              btn.setAttribute("aria-pressed", String(on));
+              updateBdSummary();
             };
             grid.appendChild(btn);
           }
@@ -696,7 +637,7 @@
           container.appendChild(dayBox);
         });
       } catch (err) {
-        container.innerHTML = `<div style="color:#dc2626;">Error rendering slots: ${err.message}</div>`;
+        container.innerHTML = `<div class="error-msg">Error rendering slots: ${esc(err.message)}</div>`;
       }
     }
 
@@ -738,7 +679,7 @@
       }
 
       if (dateSlots.length === 0) {
-        alert("Please select at least one time slot.");
+        toast("Please select at least one time slot.");
         return;
       }
 
@@ -765,14 +706,14 @@
       try {
         const result = await callApiWithRetry(payload);
         if (!result.success) throw new Error(result.message);
-        alert("Backdoor booking successful! Booking ID: " + result.bookingId + " (Status: APPROVED)");
+        toast("Backdoor booking successful! Booking ID: " + result.bookingId + " (Status: APPROVED)");
         document.getElementById("bdDetailsForm").reset();
         bdSelectedSlotsByDate = {};
         backToBdStep1();
         await fetchAllData();
         switchTab("bookings");
       } catch (err) {
-        alert("Failed to submit backdoor booking: " + err.message);
+        toast("Failed to submit backdoor booking: " + err.message);
       } finally {
         hideLoading();
       }
@@ -780,44 +721,30 @@
 
     async function fetchDailyReport() {
       const dateVal = document.getElementById("reportDateInput").value;
-      if (!dateVal) {
-        alert("Please select a date for the report.");
-        return;
-      }
+      if (!dateVal) { toast("Please select a date for the report."); return; }
 
-      showLoading("Generating daily report...");
+      showLoading("Generating daily report…");
       try {
-        const result = await callApiWithRetry({
-          action: "getDailyReportData",
-          username: currentAdmin.username,
-          password: currentAdmin.password,
-          date: dateVal
-        });
-
+        const result = await callApiWithRetry({ action: "getDailyReportData", username: currentAdmin.username, password: currentAdmin.password, date: dateVal });
         if (!result.success) throw new Error(result.message);
         const rows = result.data || [];
         const tbody = document.getElementById("reportTableBody");
-        tbody.innerHTML = "";
 
         if (rows.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">No approved bookings found for ${dateVal}.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="6" class="empty">No approved bookings on ${esc(dateVal)}.</td></tr>`;
           return;
         }
-
-        rows.forEach(r => {
-          tbody.innerHTML += `
-            <tr>
-              <td><strong>${r.bookingId}</strong></td>
-              <td>${r.facility}</td>
-              <td><span style="color:#2563eb; font-weight:600;">${r.start} - ${r.end}</span></td>
-              <td><strong>${r.bookerName}</strong><br><small style="color:#64748b;">${r.matricNumber}</small></td>
-              <td>${r.organisation || "N/A"}</td>
-              <td>${r.purpose || "-"}</td>
-            </tr>
-          `;
-        });
+        tbody.innerHTML = rows.map(r => `
+          <tr>
+            <td><strong>${esc(r.bookingId)}</strong></td>
+            <td>${esc(r.facility)}</td>
+            <td><strong style="color:var(--accent-strong)">${esc(r.start)} – ${esc(r.end)}</strong></td>
+            <td><strong>${esc(r.bookerName)}</strong><br><small>${esc(r.matricNumber)}</small></td>
+            <td>${esc(r.organisation || "N/A")}</td>
+            <td>${esc(r.purpose || "-")}</td>
+          </tr>`).join("");
       } catch (err) {
-        alert("Failed to generate report: " + err.message);
+        toast("Failed to generate report: " + err.message);
       } finally {
         hideLoading();
       }
@@ -828,8 +755,7 @@
       const mobileContainer = document.getElementById("mobileFacilitiesContainer");
       const sortBy = document.getElementById("facilitySortSelect").value;
 
-      let sorted = [...cachedFacilities];
-      sorted.sort((a, b) => {
+      const sorted = [...cachedFacilities].sort((a, b) => {
         if (sortBy === "name_asc") return a.name.localeCompare(b.name);
         if (sortBy === "name_desc") return b.name.localeCompare(a.name);
         if (sortBy === "status_active") return (a.status === "ACTIVE" ? 0 : 1) - (b.status === "ACTIVE" ? 0 : 1);
@@ -842,70 +768,42 @@
       mobileContainer.innerHTML = "";
 
       if (sorted.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:#64748b;">No facilities found.</td></tr>`;
-        mobileContainer.innerHTML = `<div style="text-align:center; padding:30px; color:#64748b; font-size:13px;">No facilities found.</div>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="empty">No facilities found.</td></tr>`;
+        mobileContainer.innerHTML = `<div class="empty">No facilities found.</div>`;
         return;
       }
 
       sorted.forEach(f => {
-        const isInactive = f.status === "INACTIVE";
-        const selectClass = "facility-status-select " + (isInactive ? "status-inactive" : "status-active");
+        const n = Number(f.rowNumber);
+        const selectClass = "facility-status-select " + (f.status === "INACTIVE" ? "status-inactive" : "status-active");
+        const options = `<option value="ACTIVE" ${f.status === "ACTIVE" ? "selected" : ""}>Active</option><option value="INACTIVE" ${f.status === "INACTIVE" ? "selected" : ""}>Inactive</option>`;
+        const jkp = `<span class="jkp-tag">${esc(f.jkp || "General")}</span>`;
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td><strong>${f.name}</strong></td>
-          <td><span class="jkp-tag">${f.jkp || "General"}</span></td>
-          <td>
-            <select id="status_${f.rowNumber}" class="${selectClass}" onchange="updateSelectColor(this)">
-              <option value="ACTIVE" ${f.status === "ACTIVE" ? "selected" : ""}>ACTIVE</option>
-              <option value="INACTIVE" ${f.status === "INACTIVE" ? "selected" : ""}>INACTIVE</option>
-            </select>
-          </td>
-          <td>
-            <input type="text" id="notice_${f.rowNumber}" value="${f.notice || ""}" placeholder="e.g. Under maintenance" style="height:34px; font-size:12px;">
-          </td>
-          <td>
-            <button type="button" class="btn-refresh" style="background:#0f172a; color:white; padding:6px 12px; font-size:12px;" onclick="saveFacility(${f.rowNumber})">Save</button>
-          </td>
-        `;
+          <td><strong>${esc(f.name)}</strong></td>
+          <td>${jkp}</td>
+          <td><select id="status_${n}" class="${selectClass}" aria-label="Status of ${esc(f.name)}" onchange="updateSelectColor(this)">${options}</select></td>
+          <td><input type="text" id="notice_${n}" value="${esc(f.notice || "")}" placeholder="e.g. Under maintenance" aria-label="Closure notice for ${esc(f.name)}" style="height:38px"></td>
+          <td><button type="button" class="btn btn-primary btn-sm" onclick="saveFacility(${n})">Save</button></td>`;
         tbody.appendChild(tr);
 
         const card = document.createElement("div");
         card.className = "facility-item-card";
         card.innerHTML = `
-          <div class="facility-card-header">
-            <div>
-              <strong style="font-size:15px; color:var(--text-main);">${f.name}</strong>
-              <div><span class="jkp-tag">${f.jkp || "General"}</span></div>
-            </div>
-          </div>
-          <div style="display:grid; gap:8px;">
-            <div>
-              <label>Status</label>
-              <select id="mob_status_${f.rowNumber}" class="${selectClass}" onchange="updateSelectColor(this); syncFacilityStatus(${f.rowNumber}, this.value);">
-                <option value="ACTIVE" ${f.status === "ACTIVE" ? "selected" : ""}>ACTIVE</option>
-                <option value="INACTIVE" ${f.status === "INACTIVE" ? "selected" : ""}>INACTIVE</option>
-              </select>
-            </div>
-            <div>
-              <label>Closure Reason / Notice</label>
-              <input type="text" id="mob_notice_${f.rowNumber}" value="${f.notice || ""}" placeholder="e.g. Under maintenance" style="height:38px; font-size:13px;" oninput="syncFacilityNotice(${f.rowNumber}, this.value)">
-            </div>
-          </div>
-          <div style="border-top:1px solid #f1f5f9; padding-top:8px; margin-top:2px;">
-            <button type="button" class="btn-refresh" style="background:#0f172a; color:white; width:100%; padding:10px; font-size:13px;" onclick="saveFacility(${f.rowNumber})">Save Changes</button>
-          </div>
-        `;
+          <div class="facility-card-header"><div><strong style="font-size:16px">${esc(f.name)}</strong><div>${jkp}</div></div></div>
+          <div><label for="mob_status_${n}">Status</label>
+            <select id="mob_status_${n}" class="${selectClass}" onchange="updateSelectColor(this); syncFacilityStatus(${n}, this.value);">${options}</select></div>
+          <div><label for="mob_notice_${n}">Closure notice</label>
+            <input type="text" id="mob_notice_${n}" value="${esc(f.notice || "")}" placeholder="e.g. Under maintenance" oninput="syncFacilityNotice(${n}, this.value)"></div>
+          <button type="button" class="btn btn-primary btn-block" onclick="saveFacility(${n})">Save changes</button>`;
         mobileContainer.appendChild(card);
       });
     }
 
-    function updateSelectColor(selectElement) {
-      if (selectElement.value === "ACTIVE") {
-        selectElement.className = selectElement.className.replace("status-inactive", "status-active") + (selectElement.className.includes("status-active") ? "" : " status-active");
-      } else {
-        selectElement.className = selectElement.className.replace("status-active", "status-inactive") + (selectElement.className.includes("status-inactive") ? "" : " status-inactive");
-      }
+    function updateSelectColor(el) {
+      el.classList.toggle("status-active", el.value === "ACTIVE");
+      el.classList.toggle("status-inactive", el.value !== "ACTIVE");
     }
 
     function syncFacilityStatus(rowNumber, val) {
@@ -935,10 +833,10 @@
           notice: notice
         });
         if (!result.success) throw new Error(result.message);
-        alert("Facility updated successfully!");
+        toast("Facility updated successfully!");
         await fetchAllData();
       } catch (err) {
-        alert("Failed to update facility: " + err.message);
+        toast("Failed to update facility: " + err.message);
       } finally {
         hideLoading();
       }
@@ -955,19 +853,16 @@
     function populateFilterDropdowns() {
       const facilitySelect = document.getElementById("facilityFilter");
       const jkpSelect = document.getElementById("jkpFilter");
-
       const facilities = [...new Set(cachedBookings.map(b => b.facility).filter(Boolean))].sort();
       const jkps = [...new Set(cachedBookings.map(b => b.jkp).filter(Boolean))].sort();
+      facilitySelect.innerHTML = '<option value="ALL">All facilities</option>' + facilities.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join("");
+      jkpSelect.innerHTML = '<option value="ALL">All JKP</option>' + jkps.map(j => `<option value="${esc(j)}">${esc(j)}</option>`).join("");
+    }
 
-      facilitySelect.innerHTML = '<option value="ALL">All facilities</option>';
-      facilities.forEach(f => {
-        facilitySelect.innerHTML += `<option value="${f}">${f}</option>`;
-      });
-
-      jkpSelect.innerHTML = '<option value="ALL">All JKP</option>';
-      jkps.forEach(j => {
-        jkpSelect.innerHTML += `<option value="${j}">${j}</option>`;
-      });
+    function badge(status) {
+      const s = String(status || "PENDING").toUpperCase();
+      const cls = ["PENDING", "APPROVED", "REJECTED", "CANCELLED"].includes(s) ? s.toLowerCase() : "pending";
+      return `<span class="badge ${cls}">${esc(s.charAt(0) + s.slice(1).toLowerCase())}</span>`;
     }
 
     function renderBookings() {
@@ -980,28 +875,18 @@
       const dateVal = document.getElementById("dateFilter").value;
       const sortBy = document.getElementById("sortSelect").value;
 
-      let filtered = cachedBookings.filter(b => {
+      const filtered = cachedBookings.filter(b => {
         if (statusVal !== "ALL" && b.status !== statusVal) return false;
         if (facilityVal !== "ALL" && b.facility !== facilityVal) return false;
         if (jkpVal !== "ALL" && b.jkp !== jkpVal) return false;
-
         if (dateVal) {
           const filterD = parseLocalDateInput(dateVal).toDateString();
-          const matchDate = (b.rows || []).some(r => parseLocalDateInput(r.date).toDateString() === filterD);
-          if (!matchDate) return false;
+          if (!(b.rows || []).some(r => parseLocalDateInput(r.date).toDateString() === filterD)) return false;
         }
-
         if (searchQuery) {
-          const match = (b.bookingId && b.bookingId.toLowerCase().includes(searchQuery)) ||
-                        (b.bookerName && b.bookerName.toLowerCase().includes(searchQuery)) ||
-                        (b.matricNumber && b.matricNumber.toLowerCase().includes(searchQuery)) ||
-                        (b.email && b.email.toLowerCase().includes(searchQuery)) ||
-                        (b.phone && b.phone.toLowerCase().includes(searchQuery)) ||
-                        (b.facility && b.facility.toLowerCase().includes(searchQuery)) ||
-                        (b.purpose && b.purpose.toLowerCase().includes(searchQuery));
-          if (!match) return false;
+          const hay = [b.bookingId, b.bookerName, b.matricNumber, b.email, b.phone, b.facility, b.purpose];
+          if (!hay.some(v => v && String(v).toLowerCase().includes(searchQuery))) return false;
         }
-
         return true;
       });
 
@@ -1010,79 +895,59 @@
         if (sortBy === "oldest") return new Date(a.timestamp) - new Date(b.timestamp);
         if (sortBy === "date_asc") return new Date(a.startDate) - new Date(b.startDate);
         if (sortBy === "status") {
-          const weights = { PENDING: 1, APPROVED: 2, REJECTED: 3, CANCELLED: 4 };
-          return (weights[a.status] || 5) - (weights[b.status] || 5);
+          const w = { PENDING: 1, APPROVED: 2, REJECTED: 3, CANCELLED: 4 };
+          return (w[a.status] || 5) - (w[b.status] || 5);
         }
         return 0;
       });
 
-      desktopTbody.innerHTML = "";
-      mobileContainer.innerHTML = "";
-
       if (filtered.length === 0) {
-        const emptyMsg = '<div style="text-align:center; padding:30px; color:#64748b; font-size:13px;">No matching bookings found.</div>';
-        desktopTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">No matching bookings found.</td></tr>`;
-        mobileContainer.innerHTML = emptyMsg;
+        desktopTbody.innerHTML = `<tr><td colspan="6" class="empty">No bookings match these filters.</td></tr>`;
+        mobileContainer.innerHTML = `<div class="empty">No bookings match these filters.</div>`;
         return;
       }
 
+      desktopTbody.innerHTML = "";
+      mobileContainer.innerHTML = "";
+
       filtered.forEach(b => {
-        const slotsHtml = (b.rows || []).map(r => {
-          const badgeClass = (r.status || 'PENDING').toLowerCase();
-          return `
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 8px; margin-bottom: 6px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <span style="font-size:12px;">📅 ${r.date} <strong style="color:#2563eb;">${r.start} - ${r.end}</strong></span>
-                <span class="badge ${badgeClass}" style="font-size:9px; padding:2px 6px;">${r.status || 'PENDING'}</span>
-              </div>
-              <div style="display: flex; gap: 6px; align-items: center;">
-                <select class="action-select" style="height: 28px; font-size: 11px; width: 100%;" onchange="updateSlotStatus(${r.sheetRow}, '${b.bookingId}', this.value)">
-                  <option value="" disabled selected>Change slot status...</option>
-                  <option value="PENDING">Pending</option>
-                  <option value="APPROVED">Approve</option>
-                  <option value="REJECTED">Reject</option>
-                  <option value="CANCELLED">Cancel</option>
-                </select>
-              </div>
-              ${r.adminNotes ? `<small style="color:#b91c1c; display:block; margin-top:2px;">Note: ${r.adminNotes}</small>` : ''}
-            </div>
-          `;
-        }).join('');
+        const slotsHtml = (b.rows || []).map(r => `
+          <div class="slot-row">
+            <div class="slot-row-top"><span>${esc(r.date)} <strong>${esc(r.start)} – ${esc(r.end)}</strong></span>${badge(r.status)}</div>
+            <select class="action-select slot-status-select" aria-label="Change slot status" data-row="${Number(r.sheetRow)}" data-bid="${esc(b.bookingId)}">
+              <option value="" disabled selected>Change status…</option>
+              <option value="PENDING">Pending</option><option value="APPROVED">Approve</option><option value="REJECTED">Reject</option><option value="CANCELLED">Cancel</option>
+            </select>
+            ${r.adminNotes ? `<small class="slot-note">Note: ${esc(r.adminNotes)}</small>` : ""}
+          </div>`).join("");
+        const jkp = `<span class="jkp-tag">${esc(b.jkp || "General")}</span>`;
+        const emailBtn = (cls) => `<button type="button" class="btn btn-outline btn-sm ${cls}" data-email-id="${esc(b.bookingId)}">Send summary</button>`;
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td><strong>${b.bookingId}</strong><br><small style="color:#64748b;">${b.organisation || "Individual"}</small></td>
-          <td><strong>${b.facility}</strong><br><span class="jkp-tag">${b.jkp || "General"}</span></td>
+          <td><strong>${esc(b.bookingId)}</strong><br><small>${esc(b.organisation || "Individual")}</small></td>
+          <td><strong>${esc(b.facility)}</strong><br>${jkp}</td>
           <td>${slotsHtml}</td>
-          <td><strong>${b.bookerName}</strong><br><small style="color:#64748b;">Matric: ${b.matricNumber}</small><br><small style="color:#64748b;">Email: ${b.email}</small><br><small style="color:#64748b; font-weight:600;">Phone: ${b.phone || "N/A"}</small></td>
-          <td>${b.purpose || "-"}</td>
-          <td>
-            <button type="button" class="btn-refresh" style="background:#0f172a; color:white; padding:6px 10px; font-size:11px; width:100%;" onclick="sendSummaryEmail('${b.bookingId}')">📧 Send Summary Email</button>
-          </td>
-        `;
+          <td><strong>${esc(b.bookerName)}</strong><br><small>${esc(b.matricNumber)}<br>${esc(b.email)}<br>${esc(b.phone || "N/A")}</small></td>
+          <td>${esc(b.purpose || "-")}</td>
+          <td>${emailBtn("btn-block")}</td>`;
         desktopTbody.appendChild(tr);
 
         const card = document.createElement("div");
         card.className = "booking-card";
         card.innerHTML = `
           <div class="booking-card-header">
-            <div>
-              <strong style="font-size:14px; color:var(--text-main);">${b.bookingId}</strong>
-              <div style="font-size:12px; color:var(--text-muted);">${b.organisation || "Individual"}</div>
-            </div>
-            <span class="badge ${(b.status || 'pending').toLowerCase()}">${b.status}</span>
+            <div><strong style="font-size:15px">${esc(b.bookingId)}</strong><div class="muted">${esc(b.organisation || "Individual")}</div></div>
+            ${badge(b.status)}
           </div>
           <div class="booking-card-body">
-            <div><strong>Facility:</strong> ${b.facility} <span class="jkp-tag">${b.jkp || "General"}</span></div>
-            <div><strong>Booker:</strong> ${b.bookerName} (${b.matricNumber})</div>
-            <div><strong>Contact:</strong> ${b.email} | ${b.phone || "N/A"}</div>
-            <div><strong>Slots &amp; Review:</strong><div style="margin-top: 4px;">${slotsHtml}</div></div>
-            <div><strong>Purpose:</strong> ${b.purpose || "-"}</div>
+            <div><span class="k">Facility</span> ${esc(b.facility)} ${jkp}</div>
+            <div><span class="k">Booker</span> ${esc(b.bookerName)} (${esc(b.matricNumber)})</div>
+            <div><span class="k">Contact</span> ${esc(b.email)} · ${esc(b.phone || "N/A")}</div>
+            <div><span class="k">Purpose</span> ${esc(b.purpose || "-")}</div>
+            <div style="margin-top:6px">${slotsHtml}</div>
           </div>
-          <div class="booking-card-footer" style="flex-direction:column; gap:8px;">
-            <button type="button" class="btn-refresh" style="background:#0f172a; color:white; width:100%; padding:8px; font-size:12px;" onclick="sendSummaryEmail('${b.bookingId}')">📧 Send Summary Email</button>
-          </div>
-        `;
+          ${emailBtn("btn-block")}`;
         mobileContainer.appendChild(card);
       });
     }
@@ -1092,7 +957,7 @@
       if (newStatus === "REJECTED" || newStatus === "CANCELLED") {
         adminNotes = prompt("Enter a reason / note for this slot:") || "";
         if (!adminNotes.trim()) {
-          alert("A reason is required when rejecting or cancelling a slot.");
+          toast("A reason is required when rejecting or cancelling a slot.");
           renderBookings();
           return;
         }
@@ -1115,10 +980,10 @@
         });
         if (!result.success) throw new Error(result.message || "Failed to update slot.");
 
-        alert("Slot status updated successfully!");
+        toast("Slot status updated successfully!");
         await fetchAllData();
       } catch (err) {
-        alert("Error updating slot: " + err.message);
+        toast("Error updating slot: " + err.message);
         renderBookings();
       } finally {
         hideLoading();
@@ -1137,9 +1002,9 @@
           bookingId: bookingId
         });
         if (!result.success) throw new Error(result.message || "Failed to send email.");
-        alert("Summary email sent successfully!");
+        toast("Summary email sent successfully!");
       } catch (err) {
-        alert("Error sending email: " + err.message);
+        toast("Error sending email: " + err.message);
       } finally {
         hideLoading();
       }
@@ -1157,6 +1022,8 @@
       document.getElementById("loginView").classList.remove("hidden");
       document.getElementById("username").value = "";
       document.getElementById("password").value = "";
+      document.getElementById("lastSyncNotice").textContent = "Last synced: never";
+      switchTab("bookings");
     }
   </script>
 </body>
