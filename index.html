@@ -99,7 +99,7 @@
     .filter-grid { display: grid; grid-template-columns: 1fr; gap: var(--s-3); }
     @media (min-width: 640px) { .filter-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (min-width: 1000px) { .filter-grid { grid-template-columns: repeat(3, 1fr); } }
-    @media (min-width: 1280px) { .filter-grid { grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr; } }
+    @media (min-width: 1280px) { .filter-grid { grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1.2fr; } }
     .filter-item label { margin-bottom: 4px; color: var(--muted); font-size: 12px; }
     .view-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: var(--s-4); margin-bottom: var(--s-5); }
     .view-head h3 { font-size: 22px; }
@@ -114,6 +114,9 @@
     th { padding: 10px; font-weight: 600; color: var(--muted); font-size: 13px; border-bottom: 2px solid var(--line); }
     td { padding: 14px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: top; overflow-wrap: anywhere; }
     tbody tr:hover td { background: #f9fbfa; }
+    tbody tr.tended-greyed td { background: #f3f5f4; color: #74837d; opacity: .72; }
+    tbody tr.tended-greyed:hover td { background: #ecefed; }
+    .booking-card.tended-greyed { background: #f3f5f4; color: #74837d; opacity: .72; }
     td small, .muted { color: var(--muted); font-size: 13px; }
     .empty { text-align: center; padding: var(--s-6) var(--s-4); color: var(--muted); font-size: 14px; }
     .mobile-cards-container { display: flex; flex-direction: column; gap: var(--s-3); }
@@ -129,6 +132,9 @@
     .badge.approved { background: var(--accent-soft); color: var(--accent-strong); }
     .badge.rejected { background: var(--danger-soft); color: var(--danger); }
     .badge.cancelled { background: #eceff0; color: #46524d; }
+    .email-indicator { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700; margin-top: 6px; }
+    .email-indicator.sent { background: var(--accent-soft); color: var(--accent-strong); }
+    .email-indicator.unsent { background: #eceff0; color: #5b6b64; }
     .jkp-tag { display: inline-block; background: var(--line-soft); color: #33433c; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 6px; margin-top: 4px; }
     .slot-row { border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--s-2) var(--s-3); margin-bottom: var(--s-2); background: #fbfcfb; }
     .slot-row-top { display: flex; justify-content: space-between; align-items: center; gap: var(--s-2); margin-bottom: 6px; font-size: 13px; }
@@ -233,9 +239,19 @@
         <div class="filter-item"><label for="facilityFilter">Facility</label><select id="facilityFilter" onchange="renderBookings()"><option value="ALL">All facilities</option></select></div>
         <div class="filter-item"><label for="jkpFilter">JKP in charge</label><select id="jkpFilter" onchange="renderBookings()"><option value="ALL">All JKP</option></select></div>
         <div class="filter-item"><label for="dateFilter">Date</label><input type="date" id="dateFilter" onchange="renderBookings()"></div>
-        <div class="filter-item"><label for="sortSelect">Sort by</label>
+        <div class="filter-item"><label for="sortSelect">Sort / timeframe</label>
           <select id="sortSelect" onchange="renderBookings()">
-            <option value="newest">Latest booking</option><option value="oldest">Oldest booking</option><option value="date_asc">Event date (soonest)</option><option value="status">Status priority</option>
+            <option value="upcoming_asc">Today &amp; onwards (soonest)</option>
+            <option value="newest">Latest booking</option>
+            <option value="oldest">Oldest booking</option>
+            <option value="date_asc">All event dates (soonest)</option>
+            <option value="status">Status priority</option>
+          </select></div>
+        <div class="filter-item"><label for="tendedModeFilter">Tended / summary</label>
+          <select id="tendedModeFilter" onchange="renderBookings()">
+            <option value="GREY">Grey out tended</option>
+            <option value="HIDE">Hide tended</option>
+            <option value="SHOW">Show all normally</option>
           </select></div>
       </div>
     </div>
@@ -348,6 +364,64 @@
 
   <script>
     const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+    const SUMMARY_SENT_STORAGE_KEY = "kk5_summary_emails_sent_v1";
+    let sentSummaryBookingIds = new Set(JSON.parse(localStorage.getItem(SUMMARY_SENT_STORAGE_KEY) || "[]"));
+
+    function persistSentSummaryIds() {
+      try {
+        localStorage.setItem(SUMMARY_SENT_STORAGE_KEY, JSON.stringify([...sentSummaryBookingIds]));
+      } catch (e) {}
+    }
+
+    function isSummaryEmailSent(booking) {
+      if (!booking) return false;
+      const backendFlag = booking.summarySent || booking.emailSent || booking.summaryEmailSent || booking.summary_sent;
+      if (backendFlag === true || String(backendFlag || "").trim().toLowerCase() === "true" || String(backendFlag || "").trim().toLowerCase() === "yes") {
+        return true;
+      }
+      return sentSummaryBookingIds.has(String(booking.bookingId || "").trim());
+    }
+
+    function isBookingTendedTo(booking) {
+      if (!booking) return false;
+      const emailDone = isSummaryEmailSent(booking);
+      const rows = Array.isArray(booking.rows) ? booking.rows : [];
+      const allSlotsDecided = rows.length > 0 && rows.every(r => String(r.status || "PENDING").toUpperCase() !== "PENDING");
+      return emailDone || allSlotsDecided;
+    }
+
+    function formatPhoneWithZero(rawPhone) {
+      const trimmed = String(rawPhone || "").trim();
+      if (!trimmed || trimmed.toUpperCase() === "N/A") return "N/A";
+      const digitsOnly = trimmed.replace(/\D/g, "");
+      if (!digitsOnly) return trimmed;
+      if (trimmed.startsWith("+")) return trimmed;
+      if (!digitsOnly.startsWith("0")) return "0" + digitsOnly;
+      return digitsOnly;
+    }
+
+    function getTodayMidnight() {
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    }
+
+    function getBookingEarliestDate(booking) {
+      const candidates = [];
+      if (booking && booking.startDate) {
+        const d = parseLocalDateInput(booking.startDate);
+        if (d && !isNaN(d.getTime())) candidates.push(new Date(d.getFullYear(), d.getMonth(), d.getDate()));
+      }
+      (booking && booking.rows ? booking.rows : []).forEach(r => {
+        if (r && r.date) {
+          const d = parseLocalDateInput(r.date);
+          if (d && !isNaN(d.getTime())) candidates.push(new Date(d.getFullYear(), d.getMonth(), d.getDate()));
+        }
+      });
+      if (candidates.length === 0) return null;
+      candidates.sort((a, b) => a - b);
+      return candidates[0];
+    }
 
     let toastTimer;
     function toast(msg) {
@@ -751,10 +825,7 @@
         return;
       }
 
-      let phoneVal = document.getElementById("bdPhone").value.trim();
-      if (phoneVal && !phoneVal.startsWith("0") && !phoneVal.startsWith("+")) {
-        phoneVal = "0" + phoneVal;
-      }
+      const phoneVal = formatPhoneWithZero(document.getElementById("bdPhone").value.trim());
 
       const payload = {
         action: "adminBookForSomeone",
@@ -957,6 +1028,13 @@
       return `<span class="badge ${cls}">${esc(s.charAt(0) + s.slice(1).toLowerCase())}</span>`;
     }
 
+    function summaryEmailIndicatorHtml(booking) {
+      const sent = isSummaryEmailSent(booking);
+      return sent
+        ? `<div class="email-indicator sent">✓ Summary sent</div>`
+        : `<div class="email-indicator unsent">Summary not sent</div>`;
+    }
+
     function renderBookings() {
       const desktopTbody = document.getElementById("desktopTableBody");
       const mobileContainer = document.getElementById("mobileCardsContainer");
@@ -966,6 +1044,8 @@
       const jkpVal = document.getElementById("jkpFilter").value;
       const dateVal = document.getElementById("dateFilter").value;
       const sortBy = document.getElementById("sortSelect").value;
+      const tendedMode = document.getElementById("tendedModeFilter").value;
+      const todayMidnight = getTodayMidnight();
 
       const filtered = getScopedBookings().filter(b => {
         if (statusVal !== "ALL" && b.status !== statusVal) return false;
@@ -974,18 +1054,30 @@
         if (dateVal) {
           const filterD = parseLocalDateInput(dateVal).toDateString();
           if (!(b.rows || []).some(r => parseLocalDateInput(r.date).toDateString() === filterD)) return false;
+        } else if (sortBy === "upcoming_asc") {
+          const earliest = getBookingEarliestDate(b);
+          if (!earliest || earliest < todayMidnight) return false;
         }
+        if (tendedMode === "HIDE" && isBookingTendedTo(b)) return false;
         if (searchQuery) {
-          const hay = [b.bookingId, b.bookerName, b.matricNumber, b.email, b.phone, b.facility, b.purpose];
+          const formattedPhone = formatPhoneWithZero(b.phone);
+          const hay = [b.bookingId, b.bookerName, b.matricNumber, b.email, b.phone, formattedPhone, b.facility, b.purpose];
           if (!hay.some(v => v && String(v).toLowerCase().includes(searchQuery))) return false;
         }
         return true;
       });
 
       filtered.sort((a, b) => {
+        if (sortBy === "upcoming_asc" || sortBy === "date_asc") {
+          const da = getBookingEarliestDate(a);
+          const db = getBookingEarliestDate(b);
+          if (!da && !db) return 0;
+          if (!da) return 1;
+          if (!db) return -1;
+          return da - db;
+        }
         if (sortBy === "newest") return new Date(b.timestamp) - new Date(a.timestamp);
         if (sortBy === "oldest") return new Date(a.timestamp) - new Date(b.timestamp);
-        if (sortBy === "date_asc") return new Date(a.startDate) - new Date(b.startDate);
         if (sortBy === "status") {
           const w = { PENDING: 1, APPROVED: 2, REJECTED: 3, CANCELLED: 4 };
           return (w[a.status] || 5) - (w[b.status] || 5);
@@ -1003,6 +1095,11 @@
       mobileContainer.innerHTML = "";
 
       filtered.forEach(b => {
+        const tended = isBookingTendedTo(b);
+        const greyCls = tendedMode === "GREY" && tended ? "tended-greyed" : "";
+        const formattedPhone = formatPhoneWithZero(b.phone);
+        const emailBadge = summaryEmailIndicatorHtml(b);
+
         const slotsHtml = (b.rows || []).map(r => `
           <div class="slot-row">
             <div class="slot-row-top"><span>${esc(r.date)} <strong>${esc(r.start)} – ${esc(r.end)}</strong></span>${badge(r.status)}</div>
@@ -1013,20 +1110,21 @@
             ${r.adminNotes ? `<small class="slot-note">Note: ${esc(r.adminNotes)}</small>` : ""}
           </div>`).join("");
         const jkp = `<span class="jkp-tag">${esc(b.jkp || "General")}</span>`;
-        const emailBtn = (cls) => `<button type="button" class="btn btn-outline btn-sm ${cls}" data-email-id="${esc(b.bookingId)}">Send summary</button>`;
+        const emailBtn = (cls) => `<button type="button" class="btn btn-outline btn-sm ${cls}" data-email-id="${esc(b.bookingId)}">Send summary</button>${emailBadge}`;
 
         const tr = document.createElement("tr");
+        if (greyCls) tr.classList.add(greyCls);
         tr.innerHTML = `
           <td><strong>${esc(b.bookingId)}</strong><br><small>${esc(b.organisation || "Individual")}</small></td>
           <td><strong>${esc(b.facility)}</strong><br>${jkp}</td>
           <td>${slotsHtml}</td>
-          <td><strong>${esc(b.bookerName)}</strong><br><small>${esc(b.matricNumber)}<br>${esc(b.email)}<br>${esc(b.phone || "N/A")}</small></td>
+          <td><strong>${esc(b.bookerName)}</strong><br><small>${esc(b.matricNumber)}<br>${esc(b.email)}<br>${esc(formattedPhone)}</small></td>
           <td>${esc(b.purpose || "-")}</td>
           <td>${emailBtn("btn-block")}</td>`;
         desktopTbody.appendChild(tr);
 
         const card = document.createElement("div");
-        card.className = "booking-card";
+        card.className = "booking-card" + (greyCls ? " " + greyCls : "");
         card.innerHTML = `
           <div class="booking-card-header">
             <div><strong style="font-size:15px">${esc(b.bookingId)}</strong><div class="muted">${esc(b.organisation || "Individual")}</div></div>
@@ -1035,7 +1133,7 @@
           <div class="booking-card-body">
             <div><span class="k">Facility</span> ${esc(b.facility)} ${jkp}</div>
             <div><span class="k">Booker</span> ${esc(b.bookerName)} (${esc(b.matricNumber)})</div>
-            <div><span class="k">Contact</span> ${esc(b.email)} · ${esc(b.phone || "N/A")}</div>
+            <div><span class="k">Contact</span> ${esc(b.email)} · ${esc(formattedPhone)}</div>
             <div><span class="k">Purpose</span> ${esc(b.purpose || "-")}</div>
             <div style="margin-top:6px">${slotsHtml}</div>
           </div>
@@ -1094,6 +1192,9 @@
           bookingId: bookingId
         });
         if (!result.success) throw new Error(result.message || "Failed to send email.");
+        sentSummaryBookingIds.add(String(bookingId || "").trim());
+        persistSentSummaryIds();
+        renderBookings();
         toast("Summary email sent successfully!");
       } catch (err) {
         toast("Error sending email: " + err.message);
