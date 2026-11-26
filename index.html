@@ -299,7 +299,7 @@
       <div class="view-head" style="margin-bottom:var(--s-4)">
         <div>
           <h3>Book for someone</h3>
-          <p>Creates an approved booking on someone’s behalf. It skips the usual limits: inactive facilities, same-day bookings, unlimited hours and any date range.</p>
+          <p>Creates an approved booking on someone’s behalf with full 00:00 – 24:00 slots. It skips personal-use limits, operating hours, inactive facilities, same-day bookings, and date-range caps.</p>
         </div>
       </div>
 
@@ -312,7 +312,7 @@
           <div><label for="bdStartDate">Start date</label><input type="date" id="bdStartDate"></div>
           <div><label for="bdEndDate">End date</label><input type="date" id="bdEndDate"></div>
         </div>
-        <button type="button" class="btn btn-primary btn-block" style="height:44px" onclick="loadBackdoorAvailability()">Show time slots</button>
+        <button type="button" class="btn btn-primary btn-block" style="height:44px" onclick="loadBackdoorAvailability()">Show 0–24 hr time slots</button>
       </div>
 
       <div id="bdStep2" class="hidden">
@@ -728,8 +728,7 @@
       bdSelectedFacilityObj = getScopedFacilities().find(f => f.name === facilityName);
       if (!bdSelectedFacilityObj) { toast("Facility details not found or outside your JKP scope."); return; }
 
-      const hoursDisplay = (bdSelectedFacilityObj.opening && bdSelectedFacilityObj.closing) ? ` · ${bdSelectedFacilityObj.opening} – ${bdSelectedFacilityObj.closing}` : "";
-      document.getElementById("bdSelectedFacilityTitle").textContent = facilityName + hoursDisplay;
+      document.getElementById("bdSelectedFacilityTitle").textContent = `${facilityName} · 00:00 – 24:00 (24-hr override)`;
       document.getElementById("bdStep1").classList.add("hidden");
       document.getElementById("bdStep2").classList.remove("hidden");
 
@@ -740,8 +739,8 @@
       try {
         const dates = getDatesBetweenLocal(parseLocalDateInput(startStr), parseLocalDateInput(endStr));
         container.innerHTML = "";
-        const openMin = parseTimeToMinutesLocal(bdSelectedFacilityObj.opening || "08:00");
-        const closeMin = parseTimeToMinutesLocal(bdSelectedFacilityObj.closing || "23:00");
+        const openMin = 0;
+        const closeMin = 24 * 60;
         const SLOT_INTERVAL = 30;
 
         dates.forEach(dateObj => {
